@@ -9,4 +9,6 @@ python manage.py migrate
 python manage.py initialize_db
 python manage.py add_election -d <path to .pb file directory> -v 3
 python manage.py compute_properties -v 3
+
+python manage.py runserver
 ```
