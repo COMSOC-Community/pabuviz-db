@@ -93,8 +93,8 @@ def collect_election_info (instance_pabutools: Instance,
 
         elif key == 'vote_type':
             for ballot_type in ballot_type_mapping:
-                if election_info[key].lower() in ballot_type_mapping[ballot_type]:
-                    election_defaults[key] = ballot_type_objs[ballot_type]
+                if election_info['vote_type'].lower() in ballot_type_mapping[ballot_type]:
+                    election_defaults['ballot_type'] = ballot_type_objs[ballot_type]
                     break
             else:
                 raise Exception("Invalid pb file. The vote type should be one of the following: {}. I was given {}.".format(
@@ -407,9 +407,9 @@ class Command(BaseCommand):
     help = "Add .pb file to database"
 
     def add_arguments(self, parser):
-        parser.add_argument('-d', nargs='*', type=str) # TODO: implement functionality and test
-        parser.add_argument('-f', nargs='*', type=str)
-        parser.add_argument('-o', '--overwrite', nargs='?', type=bool, const=True, default=False)
+        parser.add_argument('-d', nargs='*', type=str, help='specify the directory to take .pb files from')
+        parser.add_argument('-f', nargs='*', type=str, help='specify a single .pb file')
+        parser.add_argument('-o', '--overwrite', nargs='?', type=bool, const=True, default=False, help='overwrite existing elections')
         # parser.add_argument('--all', action='store_true')
 
     def handle(self, *args, **options):

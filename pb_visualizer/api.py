@@ -1,6 +1,5 @@
 from collections.abc import Callable, Iterable
 import datetime
-from email.policy import default
 import json
 import math
 from time import sleep
