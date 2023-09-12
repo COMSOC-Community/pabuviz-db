@@ -1,0 +1,11 @@
+[
+    {"model": "pb_visualizer.rule", "pk": 0, "fields": 
+        {"name": "MES", "similarity_to_greedy": 0.7243152732800444, "avg_cost_satisfaction": 0.27266801748875397, "category_proportionality": 0.8973170505265461, "equality": 0.6863111583334593, "fairness": 0.7004897408163049, "happiness": 0.9202212059766458, "median_selected_cost": 10319.552631578947}}, 
+    {"model": "pb_visualizer.rule", "pk": 1, "fields": 
+        {"name": "Iterated MES", "similarity_to_greedy": 0.7750795775979449, "avg_cost_satisfaction": 0.32805076384754334, "category_proportionality": 0.9040236472964405, "equality": 0.6920148916488053, "fairness": 0.7022599929848888, "happiness": 0.9477570027447402, "median_selected_cost": 10358.628205128205}}, 
+    {"model": "pb_visualizer.rule", "pk": 2, "fields": 
+        {"name": "Greedy", "similarity_to_greedy": 1.0, "avg_cost_satisfaction": 0.3654732320517112, "category_proportionality": 0.891914663316197, "equality": 0.6719332951901447, "fairness": 0.6665276447661815, "happiness": 0.9394780072108774, "median_selected_cost": 14331.102564102564}}, 
+    {"model": "pb_visualizer.rule", "pk": 3, "fields": 
+        {"name": "Completed MES", "similarity_to_greedy": 0.8392252093736704, "avg_cost_satisfaction": 0.3482210679560619, "category_proportionality": 0.9138200676027105, "equality": 0.6955671583272189, "fairness": 0.7009669010360104, "happiness": 0.9531897285997832, "median_selected_cost": 9972.71794871795}}, 
+    {"model": "pb_visualizer.rule", "pk": 4, "fields": 
+        {"name": "Completed iterated MES", "similarity_to_greedy": 0.7675990202904265, "avg_cost_satisfaction": 0.3319307813539947, "category_proportionality": 0.9084754210518708, "equality": 0.6946083792215954, "fairness": 0.7010264532219909, "happiness": 0.9513040501914869, "median_selected_cost": 9489.28205128205}}]
