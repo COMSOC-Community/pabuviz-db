@@ -274,7 +274,11 @@ def histogram_data_from_query_set_and_field(query_set: QuerySet,
                                             by_category: dict = None,
                                             log_scale: bool = False
                                             ) -> tuple[list, list]:
-    
+
+    # making sure all values are positive if log scale is chosen
+    if(log_scale):
+        query_set = query_set.filter(**{field_name + "__gt": 0})
+
     if by_category:
         query_sets_by_category = {category: query_set.filter(**{by_category['field_name']: category})
                                                                 for category in by_category['categories']}
@@ -291,9 +295,6 @@ def histogram_data_from_query_set_and_field(query_set: QuerySet,
             'bins': [min_value, min_value],
             'values': values
         }
-    
-    if min_value <= 0 and log_scale:
-        raise ValueError("log_scale option is only possible if all values are > 0")
 
     if(log_scale):
         bins = [min_value * (max_value/min_value)**(float(i)/num_bins) for i in range(num_bins+1)]
