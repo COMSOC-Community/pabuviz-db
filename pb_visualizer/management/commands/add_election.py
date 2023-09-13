@@ -377,7 +377,6 @@ def add_dataset(file_path: str,
     if verbosity > 1: print("creating voter objects...")
     # create voter objects
     voters_objs = []
-    pref_info_objs = []
     if verbosity > 1: print("~ 0 %  ", end="\r")
     for voter_id in voters_info['voters_defaults']:
 
@@ -388,15 +387,18 @@ def add_dataset(file_path: str,
             voters_info['voters_defaults'][voter_id]['neighborhood'] = neighborhoods_obj[voters_info['voters_foreign_keys'][voter_id]['neighborhood']]
         
         voter_obj = Voter(election=election_obj, **voters_info['voters_defaults'][voter_id])
-        for project in voters_info['voters_foreign_keys'][voter_id]['votes']:
-            pref_info_objs.append(PreferenceInfo(voter_id=voter_obj['id'],
-                                                 project=projects_obj[project],
-                                                 preference_strength=voters_info['voters_foreign_keys'][voter_id]['votes'][project]))
         voters_objs.append(voter_obj)
 
     if verbosity > 1: print("~10 %  ", end="\r")
-    Voter.objects.bulk_create(voters_objs)
+    created_voters_objs = Voter.objects.bulk_create(voters_objs)
 
+    pref_info_objs = []
+    for index, voter_id in enumerate(voters_info['voters_defaults']):
+        for project in voters_info['voters_foreign_keys'][voter_id]['votes']:
+            pref_info_objs.append(PreferenceInfo(voter_id=created_voters_objs[index].id,
+                                                 project=projects_obj[project],
+                                                 preference_strength=voters_info['voters_foreign_keys'][voter_id]['votes'][
+                                                     project]))
     if verbosity > 1: print("~50 %  ", end="\r")
     PreferenceInfo.objects.bulk_create(pref_info_objs)
         
