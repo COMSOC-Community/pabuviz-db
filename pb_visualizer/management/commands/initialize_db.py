@@ -523,6 +523,23 @@ def initialize_rules(ballot_type_objs):
 
 def initialize_rule_result_metadata(ballot_type_objs):
     
+    order_priority += 1
+    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+        name="Average cardinality satisfaction",
+        defaults={
+            "description": "The average number of approved projects chosen by the rule over all voters.",
+            "short_name": "avg_card_satisfaction",
+            "inner_type": "float",
+            "range": "0-",
+            "order_priority": order_priority,
+        }
+    )
+    metadata_obj.applies_to.set([
+        ballot_type_objs["approval"],
+        ballot_type_objs["cumulative"],
+        ballot_type_objs["cardinal"]
+    ])
+    
     order_priority = 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
         name="Average cost satisfaction",
@@ -542,12 +559,13 @@ def initialize_rule_result_metadata(ballot_type_objs):
     
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Average cardinality satisfaction",
+        name="Average cardinality satisfaction (normalized)",
         defaults={
-            "description": "The average number of approved projects chosen by the rule over all voters.",
-            "short_name": "avg_card_satisfaction",
+            "description": "The average number of approved projects chosen by the rule over all voters,"
+                           "normalized by the maximum number of projects that could be chosen w.r.t. the budget limit.",
+            "short_name": "avg_norm_card_satisfaction",
             "inner_type": "float",
-            "range": "0-",
+            "range": "01",
             "order_priority": order_priority,
         }
     )
@@ -564,24 +582,6 @@ def initialize_rule_result_metadata(ballot_type_objs):
             "description": "The average cost satisfaction of the voters,"
                            "normalized by the maximum possible budget allocation cost (w.r.t. the budget limit)",
             "short_name": "avg_norm_cost_satisfaction",
-            "inner_type": "float",
-            "range": "01",
-            "order_priority": order_priority,
-        }
-    )
-    metadata_obj.applies_to.set([
-        ballot_type_objs["approval"],
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"]
-    ])
-    
-    order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Average cardinality satisfaction (normalized)",
-        defaults={
-            "description": "The average number of approved projects chosen by the rule over all voters,"
-                           "normalized by the maximum number of projects that could be chosen w.r.t. the budget limit.",
-            "short_name": "avg_norm_card_satisfaction",
             "inner_type": "float",
             "range": "01",
             "order_priority": order_priority,
