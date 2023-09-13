@@ -380,7 +380,7 @@ def initialize_rules(ballot_type_objs):
 
 
     # rules
-    order_priority = 1
+    
     rule_obj, _ = Rule.objects.update_or_create(
         abbreviation = "greedy_card",
         defaults={
@@ -523,7 +523,7 @@ def initialize_rules(ballot_type_objs):
 
 def initialize_rule_result_metadata(ballot_type_objs):
     
-    order_priority += 1
+    order_priority = 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
         name="Average cardinality satisfaction",
         defaults={
@@ -540,7 +540,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         ballot_type_objs["cardinal"]
     ])
     
-    order_priority = 1
+    order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
         name="Average cost satisfaction",
         defaults={
