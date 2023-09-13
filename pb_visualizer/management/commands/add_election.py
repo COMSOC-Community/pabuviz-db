@@ -395,7 +395,10 @@ def add_dataset(file_path: str,
         voters_objs.append(voter_obj)
 
     if verbosity > 1: print("~10 %  ", end="\r")
-    Voter.objects.bulk_create(voters_objs)
+    voter_objs = Voter.objects.bulk_create(voters_objs)
+    for v in voter_objs:
+        v.save()
+
     
     if verbosity > 1: print("~50 %  ", end="\r")
     PreferenceInfo.objects.bulk_create(pref_info_objs)
