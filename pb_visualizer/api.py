@@ -260,7 +260,6 @@ def get_election_property_histogram(election_property_short_name: str,
 
     election_property = get_filterable_election_property_list([election_property_short_name])['data'][0]
     
-    print(election_property_short_name, hist_data)
     return {
         'data': hist_data,
         'meta_data': {

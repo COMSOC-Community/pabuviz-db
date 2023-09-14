@@ -67,7 +67,7 @@ def initialize_election_metadata(ballot_type_objs):
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
         short_name="max_sum_cost",
         defaults={
-            "name": "maximum allowed cost",
+            "name": "maximum allowed ballot cost",
             "description": "maximum cost restriction on the ballots",
             "inner_type": "float",
             "order_priority": order_priority
@@ -79,7 +79,7 @@ def initialize_election_metadata(ballot_type_objs):
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
         short_name="min_sum_cost",
         defaults={
-            "name": "minimum allowed cost",
+            "name": "minimum allowed ballot cost",
             "description": "minimum cost restriction on the ballots",
             "inner_type": "float",
             "order_priority": order_priority
@@ -542,46 +542,11 @@ def initialize_rule_result_metadata(ballot_type_objs):
     
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Average cost satisfaction",
-        defaults={
-            "description": "The average cost satisfaction of the voters",
-            "short_name": "avg_cost_satisfaction",
-            "inner_type": "float",
-            "range": "0-",
-            "order_priority": order_priority,
-        }
-    )
-    metadata_obj.applies_to.set([
-        ballot_type_objs["approval"],
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"]
-    ])
-    
-    order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
         name="Average cardinality satisfaction (normalized)",
         defaults={
             "description": "The average number of approved projects chosen by the rule over all voters,"
                            "normalized by the maximum number of projects that could be chosen w.r.t. the budget limit.",
             "short_name": "avg_norm_card_satisfaction",
-            "inner_type": "float",
-            "range": "01",
-            "order_priority": order_priority,
-        }
-    )
-    metadata_obj.applies_to.set([
-        ballot_type_objs["approval"],
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"]
-    ])
-
-    order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Average cost satisfaction (normalized)",
-        defaults={
-            "description": "The average cost satisfaction of the voters,"
-                           "normalized by the maximum possible budget allocation cost (w.r.t. the budget limit)",
-            "short_name": "avg_norm_cost_satisfaction",
             "inner_type": "float",
             "range": "01",
             "order_priority": order_priority,
@@ -599,6 +564,41 @@ def initialize_rule_result_metadata(ballot_type_objs):
         defaults={
             "description": "The average relative number of approved project chosen by the rule over all voters.",
             "short_name": "avg_rel_card_satisfaction",
+            "inner_type": "float",
+            "range": "01",
+            "order_priority": order_priority,
+        }
+    )
+    metadata_obj.applies_to.set([
+        ballot_type_objs["approval"],
+        ballot_type_objs["cumulative"],
+        ballot_type_objs["cardinal"]
+    ])
+    
+    order_priority += 1
+    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+        name="Average cost satisfaction",
+        defaults={
+            "description": "The average cost satisfaction of the voters",
+            "short_name": "avg_cost_satisfaction",
+            "inner_type": "float",
+            "range": "0-",
+            "order_priority": order_priority,
+        }
+    )
+    metadata_obj.applies_to.set([
+        ballot_type_objs["approval"],
+        ballot_type_objs["cumulative"],
+        ballot_type_objs["cardinal"]
+    ])
+
+    order_priority += 1
+    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+        name="Average cost satisfaction (normalized)",
+        defaults={
+            "description": "The average cost satisfaction of the voters,"
+                           "normalized by the maximum possible budget allocation cost (w.r.t. the budget limit)",
+            "short_name": "avg_norm_cost_satisfaction",
             "inner_type": "float",
             "range": "01",
             "order_priority": order_priority,
