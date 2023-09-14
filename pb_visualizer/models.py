@@ -40,7 +40,7 @@ class RuleFamily(models.Model):
     # rule data
     name = models.CharField(max_length=50,
                             unique=True)
-    abbreviation = models.SlugField(max_length=20,
+    abbreviation = models.SlugField(max_length=50,
                                     unique=True,
                                     verbose_name="abbreviation", 
                                     primary_key=True)
@@ -60,7 +60,7 @@ class Rule(models.Model):
     # rule data
     name = models.CharField(max_length=50,
                             unique=True)
-    abbreviation = models.SlugField(max_length=20,
+    abbreviation = models.SlugField(max_length=50,
                                     unique=True,
                                     verbose_name="abbreviation", 
                                     primary_key=True)
@@ -157,7 +157,7 @@ class Election(models.Model):
     # meta data
     modification_date = models.DateField(auto_now=True)
 
-    file_path = models.CharField(max_length=200,
+    file_path = models.CharField(max_length=500,
                                  blank=True,
                                  null=True,
                                  unique=True)
@@ -241,7 +241,7 @@ class VotingMethod(models.Model):
 
 class Project(models.Model):
     # rule data
-    project_id = models.CharField(max_length=20,
+    project_id = models.CharField(max_length=50,
                                   verbose_name="project id",
                                   help_text="project id specific to the election")
     cost = models.DecimalField(max_digits=15,
@@ -264,12 +264,12 @@ class Project(models.Model):
 
 
 class Voter(models.Model):
-    voter_id = models.CharField(max_length=20,
+    voter_id = models.CharField(max_length=50,
                                 verbose_name="voter id",
                                 help_text="voter id specific to the election")
     age = models.IntegerField(blank=True,
                               null=True)
-    gender = models.CharField(max_length=20,
+    gender = models.CharField(max_length=50,
                               choices=GENDER,
                               blank=True)
     voting_method = models.ForeignKey(VotingMethod,
@@ -309,11 +309,11 @@ class PreferenceInfo(models.Model):
 class ElectionMetadata(models.Model):
     name = models.CharField(max_length=50,
                             unique=True)
-    short_name = models.CharField(max_length=20,
+    short_name = models.CharField(max_length=50,
                                   unique=True)
     description = models.TextField()
     
-    inner_type = models.CharField(max_length=20,
+    inner_type = models.CharField(max_length=50,
                                   choices=INNER_TYPE)
     # range = models.CharField(max_length=10)
     order_priority = models.IntegerField()
@@ -372,10 +372,10 @@ class RuleResult(models.Model):
 class RuleResultMetadata(models.Model):
     name = models.CharField(max_length=50,
                             unique=True)
-    short_name = models.CharField(max_length=20,
+    short_name = models.CharField(max_length=50,
                                   unique=True)
     description = models.TextField()
-    inner_type = models.CharField(max_length=20,
+    inner_type = models.CharField(max_length=50,
                                   choices=INNER_TYPE)
     range = models.CharField(max_length=10)
     order_priority = models.IntegerField()
@@ -399,7 +399,7 @@ class RuleResultDataProperty(models.Model):
     metadata = models.ForeignKey(RuleResultMetadata,
                                  on_delete=models.CASCADE,
                                  related_name="data_properties")
-    value = models.CharField(max_length=200)
+    value = models.CharField(max_length=500)
 
     def __str__(self):
         return "RuleResult data property. Rule: " + self.rule_result.rule.name + ", Metadata: " + self.metadata.name + ". Value: " + str(self.value)
