@@ -171,10 +171,11 @@ def get_rule_result_average_data_properties(rule_abbr_list: Iterable[str],
     election_query_set = filter_elections(**election_filters)
     election_query_set = filter_elections_by_rule_properties(election_query_set,
                                                              rule_abbr_list=rule_abbr_list,
-                                                             property_short_names=property_short_names)
+                                                             property_short_names=property_short_names)    
     rule_result_data_property_query_set = RuleResultDataProperty.objects.all().filter(
         rule_result__election__in=election_query_set
     )
+
 
     data_dict = {}
     for rule in rule_abbr_list:
@@ -213,7 +214,6 @@ def get_satisfaction_histogram(rule_abbr_list: Iterable[str],
     data_dict = get_rule_result_average_data_properties(rule_abbr_list,
                                                         ['aggregated_norm_cost_satisfaction', 'avg_norm_cost_satisfaction'],
                                                         election_filters=election_filters)
-    
     data_dict['data'] = {
         rule: {
             'hist_data': data_dict['data'][rule]['aggregated_norm_cost_satisfaction'],

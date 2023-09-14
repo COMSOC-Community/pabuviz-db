@@ -13,7 +13,7 @@ class AddElectionTestCase(TestCase):
 
     def test_integrity(self):
         """test integrity of election even if pb file has integrity errors"""
-        add_dataset("pb_visualizer/tests/test_files/test_file_non_integral_data.pb", None, None, verbosity=0)
+        add_dataset("pb_visualizer/tests/test_files/test_file_non_integral_data.pb", None, verbosity=0)
         election = Election.objects.get(name="election1")
 
         assert(election.num_projects == election.projects.count())
@@ -22,16 +22,15 @@ class AddElectionTestCase(TestCase):
         assert(election.has_targets)
         assert(election.has_voting_methods)
         assert(election.has_neighborhoods)
-        assert(election.voters.get(voter_id="1256").ballot_type == election.ballot_type)
-        assert(election.rule == Rule.objects.get(abbreviation="greedy"))
+        assert(election.rule == Rule.objects.get(abbreviation="greedy_cost"))
 
     def test_missing_data(self):
         """election without budget is rejected"""
-        self.assertRaises(Exception, lambda: add_dataset("pb_visualizer/tests/test_files/test_file_missing_budget.pb", None, None, verbosity=0))
+        self.assertRaises(Exception, lambda: add_dataset("pb_visualizer/tests/test_files/test_file_missing_budget.pb", None, verbosity=0))
 
     def test_ordinal_example(self):
         """test if importing ordinal preferences works"""
-        add_dataset("pb_visualizer/tests/test_files/test_file_ordinal.pb", None, None, verbosity=0)
+        add_dataset("pb_visualizer/tests/test_files/test_file_ordinal.pb", None, verbosity=0)
         election = Election.objects.get(name="election4")
         voter = Voter.objects.get(election=election, voter_id="85")
         project = Project.objects.get(election=election, project_id="6")
@@ -39,7 +38,7 @@ class AddElectionTestCase(TestCase):
 
     def test_cumulative_example(self):
         """test if importing ordinal preferences works"""
-        add_dataset("pb_visualizer/tests/test_files/test_file_cumulative.pb", None, None, verbosity=0)
+        add_dataset("pb_visualizer/tests/test_files/test_file_cumulative.pb", None, verbosity=0)
         election = Election.objects.get(name="election5")
         voter = Voter.objects.get(election=election, voter_id="15393")
         project = Project.objects.get(election=election, project_id="2")

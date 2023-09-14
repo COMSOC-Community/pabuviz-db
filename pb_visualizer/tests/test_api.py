@@ -138,20 +138,25 @@ class TestApi(TestCase):
             greedy_result_obj = RuleResult.objects.create(rule=greedy_obj, election=election_obj)
             mes_result_obj = RuleResult.objects.create(rule=mes_obj, election=election_obj)
                         
-            aggr_sat_obj = RuleResultMetadata.objects.get(short_name='aggregated_relative_norm_satisfaction')
+            aggr_sat_obj = RuleResultMetadata.objects.get(short_name='aggregated_norm_cost_satisfaction')
+            avg_sat_obj = RuleResultMetadata.objects.get(short_name='avg_norm_cost_satisfaction')
 
             if i == 0:
                 RuleResultDataProperty.objects.create(id=1, rule_result=greedy_result_obj, metadata=aggr_sat_obj, value=json.dumps([.5, .5, 0]))
                 RuleResultDataProperty.objects.create(id=2, rule_result=mes_result_obj, metadata=aggr_sat_obj, value=json.dumps([.75, .25, 0]))
+                RuleResultDataProperty.objects.create(id=3, rule_result=greedy_result_obj, metadata=avg_sat_obj, value=.5)
+                RuleResultDataProperty.objects.create(id=4, rule_result=mes_result_obj, metadata=avg_sat_obj, value=.5)
             else:
-                RuleResultDataProperty.objects.create(id=3, rule_result=greedy_result_obj, metadata=aggr_sat_obj, value=json.dumps([0, 0, 1]))
-                RuleResultDataProperty.objects.create(id=4, rule_result=mes_result_obj, metadata=aggr_sat_obj, value=json.dumps([.25, .25, .5]))
+                RuleResultDataProperty.objects.create(id=5, rule_result=greedy_result_obj, metadata=aggr_sat_obj, value=json.dumps([0, 0, 1]))
+                RuleResultDataProperty.objects.create(id=6, rule_result=mes_result_obj, metadata=aggr_sat_obj, value=json.dumps([.25, .25, .5]))
+                RuleResultDataProperty.objects.create(id=7, rule_result=greedy_result_obj, metadata=avg_sat_obj, value=.5)
+                RuleResultDataProperty.objects.create(id=8, rule_result=mes_result_obj, metadata=avg_sat_obj, value=.5)
 
         rule_list = ['mes', 'greedy_cost']
         hist_data = get_satisfaction_histogram(rule_list)
 
-        assert(np.all(hist_data['data']['greedy_cost'] == [0.25, 0.25, 0.5]))
-        assert(np.all(hist_data['data']['mes'] == [0.5, 0.25, 0.25]))
+        assert(np.all(hist_data['data']['greedy_cost']['hist_data'] == [0.25, 0.25, 0.5]))
+        assert(np.all(hist_data['data']['mes']['hist_data'] == [0.5, 0.25, 0.25]))
         assert(hist_data['meta_data']['num_elections'] == 2)
 
 
