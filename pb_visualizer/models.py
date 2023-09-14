@@ -27,7 +27,7 @@ from .choices import *
 #         return self.name
 
 class BallotType(models.Model):
-    name = models.CharField(max_length=100,
+    name = models.CharField(max_length=50,
                             unique=True, 
                             primary_key=True)
     description = models.TextField()
@@ -38,9 +38,9 @@ class BallotType(models.Model):
 
 class RuleFamily(models.Model):
     # rule data
-    name = models.CharField(max_length=100,
+    name = models.CharField(max_length=50,
                             unique=True)
-    abbreviation = models.SlugField(max_length=100,
+    abbreviation = models.SlugField(max_length=20,
                                     unique=True,
                                     verbose_name="abbreviation", 
                                     primary_key=True)
@@ -60,7 +60,7 @@ class Rule(models.Model):
     # rule data
     name = models.CharField(max_length=100,
                             unique=True)
-    abbreviation = models.SlugField(max_length=100,
+    abbreviation = models.SlugField(max_length=20,
                                     unique=True,
                                     verbose_name="abbreviation", 
                                     primary_key=True)
@@ -90,7 +90,7 @@ class Election(models.Model):
     # Election data
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-    country = models.CharField(max_length=100,
+    country = models.CharField(max_length=50,
                                blank=True)
     unit = models.CharField(max_length=100,
                             verbose_name="unit",
@@ -125,7 +125,7 @@ class Election(models.Model):
                                 null=True,
                                 verbose_name="end date",
                                 help_text="end date of the voting process")
-    language = models.CharField(max_length=100,
+    language = models.CharField(max_length=50,
                                 blank=True)
     edition = models.CharField(max_length=100,
                                blank=True)
@@ -157,7 +157,7 @@ class Election(models.Model):
     # meta data
     modification_date = models.DateField(auto_now=True)
 
-    file_path = models.CharField(max_length=1000,
+    file_path = models.CharField(max_length=100,
                                  blank=True,
                                  null=True,
                                  unique=True)
@@ -198,7 +198,7 @@ class Election(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=50)
     election = models.ForeignKey(Election,
                                  on_delete=models.CASCADE,
                                  related_name="categories")
@@ -208,7 +208,7 @@ class Category(models.Model):
 
 
 class Target(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=50)
     election = models.ForeignKey(Election,
                                  on_delete=models.CASCADE,
                                  related_name="targets")
@@ -218,7 +218,7 @@ class Target(models.Model):
 
 
 class Neighborhood(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=50)
     election = models.ForeignKey(Election,
                                  on_delete=models.CASCADE,
                                  related_name="neighborhoods")
@@ -228,7 +228,7 @@ class Neighborhood(models.Model):
 
 
 class VotingMethod(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=50)
     election = models.ForeignKey(Election,
                                  on_delete=models.CASCADE,
                                  related_name="voting_methods")
@@ -241,7 +241,7 @@ class VotingMethod(models.Model):
 
 class Project(models.Model):
     # rule data
-    project_id = models.CharField(max_length=100,
+    project_id = models.CharField(max_length=50,
                                   verbose_name="project id",
                                   help_text="project id specific to the election")
     cost = models.DecimalField(max_digits=15,
@@ -264,12 +264,12 @@ class Project(models.Model):
 
 
 class Voter(models.Model):
-    voter_id = models.CharField(max_length=100,
+    voter_id = models.CharField(max_length=50,
                                 verbose_name="voter id",
                                 help_text="voter id specific to the election")
     age = models.IntegerField(blank=True,
                               null=True)
-    gender = models.CharField(max_length=100,
+    gender = models.CharField(max_length=50,
                               choices=GENDER,
                               blank=True)
     voting_method = models.ForeignKey(VotingMethod,
@@ -309,11 +309,11 @@ class PreferenceInfo(models.Model):
 class ElectionMetadata(models.Model):
     name = models.CharField(max_length=100,
                             unique=True)
-    short_name = models.CharField(max_length=100,
+    short_name = models.CharField(max_length=50,
                                   unique=True)
     description = models.TextField()
     
-    inner_type = models.CharField(max_length=100,
+    inner_type = models.CharField(max_length=50,
                                   choices=INNER_TYPE)
     # range = models.CharField(max_length=10)
     order_priority = models.IntegerField()
@@ -372,10 +372,10 @@ class RuleResult(models.Model):
 class RuleResultMetadata(models.Model):
     name = models.CharField(max_length=100,
                             unique=True)
-    short_name = models.CharField(max_length=100,
+    short_name = models.CharField(max_length=50,
                                   unique=True)
     description = models.TextField()
-    inner_type = models.CharField(max_length=100,
+    inner_type = models.CharField(max_length=50,
                                   choices=INNER_TYPE)
     range = models.CharField(max_length=10)
     order_priority = models.IntegerField()
@@ -399,7 +399,7 @@ class RuleResultDataProperty(models.Model):
     metadata = models.ForeignKey(RuleResultMetadata,
                                  on_delete=models.CASCADE,
                                  related_name="data_properties")
-    value = models.CharField(max_length=1000)
+    value = models.TextField()
 
     def __str__(self):
         return "RuleResult data property. Rule: " + self.rule_result.rule.name + ", Metadata: " + self.metadata.name + ". Value: " + str(self.value)
@@ -417,7 +417,7 @@ class RuleResultDataProperty(models.Model):
 
 class Log(models.Model):
     log = models.TextField()
-    log_type = models.CharField(max_length=100)
+    log_type = models.CharField(max_length=50)
     log_num = models.IntegerField(default=0)
     publication_date = models.DateTimeField()
 
