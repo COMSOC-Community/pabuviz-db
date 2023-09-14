@@ -575,7 +575,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         ballot_type_objs["cardinal"]
     ])
 
-    order_priority = 1
+    order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
         name="Average cost satisfaction (normalized)",
         defaults={

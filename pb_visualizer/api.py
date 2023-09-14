@@ -259,6 +259,8 @@ def get_election_property_histogram(election_property_short_name: str,
         )
 
     election_property = get_filterable_election_property_list([election_property_short_name])['data'][0]
+    
+    print(election_property_short_name, hist_data)
     return {
         'data': hist_data,
         'meta_data': {
@@ -293,6 +295,7 @@ def histogram_data_from_query_set_and_field(query_set: QuerySet,
             values = [query_set.count()]
         return {
             'bins': [min_value, min_value],
+            'bin_midpoints': [min_value],
             'values': values
         }
 
@@ -326,7 +329,6 @@ def histogram_data_from_query_set_and_field(query_set: QuerySet,
         'bin_midpoints': bin_midpoints,
         'values': histogram_data_values
     }
-
     return histogram_data
 
 
