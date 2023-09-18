@@ -298,7 +298,7 @@ def compute_properties(election_names=None,
             compute_rule_result_properties(election_parser, rule_properties, overwrite=overwrite, verbosity=verbosity)
 
 class Command(BaseCommand):
-    help = "TODO" # TODO
+    help = "compute all properties, rules and rule result properties for the elections in the database"
     
     def add_arguments(self, parser):
         parser.add_argument('-e','--election_names', nargs='*', type=str, default=None,

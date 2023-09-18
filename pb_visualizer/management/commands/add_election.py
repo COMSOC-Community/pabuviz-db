@@ -110,7 +110,7 @@ def collect_election_info (instance_pabutools: Instance,
                 raise Exception("Unknown rule. Rules currently supported by the database are: " + str([rule + ": " + str(rule_abbreviation_mapping[rule]) for rule in rule_abbreviation_mapping]))
 
         elif key in ['date_begin', 'date_end']:
-            election_defaults[key] = datetime.datetime.strptime(election_info[key], "%d.%m.%Y").date()  # TODO: discuss date format
+            election_defaults[key] = datetime.datetime.strptime(election_info[key], "%d.%m.%Y").date()
 
         else:
             if verbosity > 0: print("ignoring unknown key for election data: ", key)
@@ -129,7 +129,7 @@ def collect_election_info (instance_pabutools: Instance,
                                                   election_defaults.get('subunit'),
                                                   election_defaults.get('district'),
                                                   election_defaults.get('date_begin')
-                                                  )  #TODO: come up with better automated naming
+                                                  )  #TODO: come up with better automated naming, do we even need it?
     
     # we check that all obligatory fields are present
     for field in Election._meta.get_fields():
@@ -161,7 +161,6 @@ def collect_projects_info(instance_pabutools: Instance,
 
     # containers for the projects/category/target names and the model objects
     categories_set, targets_set = set(), set()
-    projects_selected = []
 
     unknown_keys = []
 
@@ -173,13 +172,10 @@ def collect_projects_info(instance_pabutools: Instance,
         for key in project_info:
             if key in ['project_id', 'cost', 'name']:
                 project_defaults[key] = project_info[key]
-            elif key == 'selected':
-                if project_info[key] == '1':
-                    projects_selected.append(project.name)    # TODO: remove
             elif key in ['categories', 'targets', 'name']: # skipping redundant information
                 continue
             else:
-                if key not in unknown_keys and key != 'votes':
+                if key not in unknown_keys and key not in ['votes', 'selected']:
                     unknown_keys.append(key)
                     if verbosity > 0: print("ignoring unknown key for project data: ", key)
 
@@ -206,7 +202,6 @@ def collect_projects_info(instance_pabutools: Instance,
         'projects_foreign_keys': projects_foreign_keys,
         'categories_set': categories_set,
         'targets_set': targets_set,
-        'projects_selected': projects_selected
     }
 
 def collect_voters_info(profile_pabutools: Profile,
@@ -377,6 +372,7 @@ def add_dataset(file_path: str,
     if verbosity > 1: print("creating voter objects...")
     # create voter objects
     voters_objs = []
+    pref_info_objs = []
     if verbosity > 1: print("~ 0 %  ", end="\r")
     for voter_id in voters_info['voters_defaults']:
 
@@ -386,18 +382,16 @@ def add_dataset(file_path: str,
         if 'neighborhood' in voters_info['voters_foreign_keys'][voter_id]:
             voters_info['voters_defaults'][voter_id]['neighborhood'] = neighborhoods_obj[voters_info['voters_foreign_keys'][voter_id]['neighborhood']]
         
-        voter_obj = Voter.objects.create(election=election_obj, **voters_info['voters_defaults'][voter_id])
+        voter_obj = Voter(election=election_obj, **voters_info['voters_defaults'][voter_id])
+        for project in voters_info['voters_foreign_keys'][voter_id]['votes']:
+            pref_info_objs.append(PreferenceInfo(voter=voter_obj,
+                                                 project=projects_obj[project],
+                                                 preference_strength=voters_info['voters_foreign_keys'][voter_id]['votes'][project]))
         voters_objs.append(voter_obj)
 
     if verbosity > 1: print("~10 %  ", end="\r")
-
-    pref_info_objs = []
-    for index, voter_id in enumerate(voters_info['voters_defaults']):
-        for project in voters_info['voters_foreign_keys'][voter_id]['votes']:
-            pref_info_objs.append(PreferenceInfo(voter_id=voters_objs[index].id,
-                                                 project=projects_obj[project],
-                                                 preference_strength=voters_info['voters_foreign_keys'][voter_id]['votes'][
-                                                     project]))
+    Voter.objects.bulk_create(voters_objs)
+    
     if verbosity > 1: print("~50 %  ", end="\r")
     PreferenceInfo.objects.bulk_create(pref_info_objs)
         

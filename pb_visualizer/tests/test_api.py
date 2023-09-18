@@ -49,44 +49,44 @@ class TestApi(TestCase):
             avg_ballot_cost_obj = ElectionMetadata.objects.get(short_name="avg_ballot_cost")
             ElectionDataProperty.objects.create(id=i+10, metadata=avg_ballot_cost_obj, election=election_obj, value=float(i**2))
                
-        election_query_set = Election.objects.all()
-        election_query_set = filter_elections(election_query_set,
-                                              num_votes={'min': 10},
+        election_query_set = filter_elections(num_votes={'min': 10},
                                               num_projects={'max': 8})
         
         assert(len(election_query_set) == 1)
         assert(election_query_set.first().name == "e1")
         
-        election_query_set = Election.objects.all()
-        election_query_set = filter_elections(election_query_set,
-                                              num_votes={'max': 1000},
+        election_query_set = filter_elections(num_votes={'max': 1000},
                                               num_projects={'min': 4},
                                               budget={'min': 200})
         assert(len(election_query_set) == 1)
         assert(election_query_set.first().name == "e2")
 
-        election_query_set = Election.objects.all()
-        election_query_set = filter_elections(election_query_set,
-                                              budget={'max': 200})
+        election_query_set = filter_elections(budget={'max': 200})
         assert(len(election_query_set) == 3)
 
-        election_query_set = Election.objects.all()
-        election_query_set = filter_elections(election_query_set,
-                                              ballot_types=['ordinal', 'approval'])
+        election_query_set = filter_elections(ballot_types=['ordinal', 'approval'])
         assert(len(election_query_set) == 3)
 
         prop_list = ['avg_card_satisfaction', 'avg_cost_satisfaction']
         rule_list = ['mes', 'greedy_cost']
 
-        election_query_set = Election.objects.all()
-        election_query_set = filter_elections(election_query_set,
-                                              avg_ballot_length={'min': 1})
+        election_query_set = filter_elections(avg_ballot_length={'min': 1})
         assert(len(election_query_set) == 2)
         election_query_set = filter_elections(election_query_set,
                                               avg_ballot_length={'max': 1})
         assert(len(election_query_set) == 1)
         assert(election_query_set.first().name == "e1")
 
+        election_query_set = filter_elections(name={'contains': 'e'})
+        assert(len(election_query_set) == 3)
+
+        election_query_set = filter_elections(name={'contains': 'e2'})
+        assert(len(election_query_set) == 1)
+        assert(election_query_set.first().name == "e2")
+
+        election_query_set = filter_elections(name={'equals': 'e1'})
+        assert(len(election_query_set) == 1)
+        assert(election_query_set.first().name == "e1")
 
         election_query_set = Election.objects.all()
         election_query_set = filter_elections_by_rule_properties(election_query_set,
