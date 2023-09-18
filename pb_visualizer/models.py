@@ -12,7 +12,7 @@ from .choices import *
 # ================================
 
 # class DataTag(models.Model):
-#     name = models.CharField(max_length=30,
+#     name = models.CharField(max_length=50,
 #                             unique=True,
 #                             verbose_name="",
 # help_text="name")
@@ -38,7 +38,7 @@ class BallotType(models.Model):
 
 class RuleFamily(models.Model):
     # rule data
-    name = models.CharField(max_length=30,
+    name = models.CharField(max_length=50,
                             unique=True)
     abbreviation = models.SlugField(max_length=15,
                                     unique=True,
@@ -58,7 +58,7 @@ class RuleFamily(models.Model):
 
 class Rule(models.Model):
     # rule data
-    name = models.CharField(max_length=30,
+    name = models.CharField(max_length=50,
                             unique=True)
     abbreviation = models.SlugField(max_length=15,
                                     unique=True,
@@ -90,7 +90,7 @@ class Election(models.Model):
     # Election data
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
-    country = models.CharField(max_length=30,
+    country = models.CharField(max_length=50,
                                blank=True)
     unit = models.CharField(max_length=50,
                             verbose_name="unit",
@@ -125,7 +125,7 @@ class Election(models.Model):
                                 null=True,
                                 verbose_name="end date",
                                 help_text="end date of the voting process")
-    language = models.CharField(max_length=30,
+    language = models.CharField(max_length=50,
                                 blank=True)
     edition = models.CharField(max_length=50,
                                blank=True)
@@ -371,7 +371,7 @@ class RuleResult(models.Model):
 
 
 class RuleResultMetadata(models.Model):
-    name = models.CharField(max_length=30,
+    name = models.CharField(max_length=50,
                             unique=True)
     short_name = models.CharField(max_length=15,
                                   unique=True,
@@ -419,7 +419,7 @@ class RuleResultDataProperty(models.Model):
 
 class Log(models.Model):
     log = models.TextField()
-    log_type = models.CharField(max_length=30)
+    log_type = models.CharField(max_length=50)
     log_num = models.IntegerField(default=0)
     publication_date = models.DateTimeField()
 
