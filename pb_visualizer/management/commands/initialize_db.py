@@ -528,7 +528,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         name="Average cardinality satisfaction",
         defaults={
             "description": "The average number of approved projects chosen by the rule over all voters.",
-            "short_name": "avg_card_satisfaction",
+            "short_name": "avg_card_sat",
             "inner_type": "float",
             "range": "0-",
             "order_priority": order_priority,
@@ -546,7 +546,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         defaults={
             "description": "The average number of approved projects chosen by the rule over all voters,"
                            "normalized by the maximum number of projects that could be chosen w.r.t. the budget limit.",
-            "short_name": "avg_norm_card_satisfaction",
+            "short_name": "avg_nrmcard_sat",
             "inner_type": "float",
             "range": "01",
             "order_priority": order_priority,
@@ -563,7 +563,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         name="Average relative cardinality satisfaction",
         defaults={
             "description": "The average relative number of approved project chosen by the rule over all voters.",
-            "short_name": "avg_rel_card_satisfaction",
+            "short_name": "avg_relcard_sat",
             "inner_type": "float",
             "range": "01",
             "order_priority": order_priority,
@@ -580,7 +580,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         name="Average cost satisfaction",
         defaults={
             "description": "The average cost satisfaction of the voters",
-            "short_name": "avg_cost_satisfaction",
+            "short_name": "avg_cost_sat",
             "inner_type": "float",
             "range": "0-",
             "order_priority": order_priority,
@@ -598,7 +598,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         defaults={
             "description": "The average cost satisfaction of the voters,"
                            "normalized by the maximum possible budget allocation cost (w.r.t. the budget limit)",
-            "short_name": "avg_norm_cost_satisfaction",
+            "short_name": "avg_nrmcost_sat",
             "inner_type": "float",
             "range": "01",
             "order_priority": order_priority,
@@ -615,7 +615,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         name="Average relative cost satisfaction",
         defaults={
             "description": "The average relative cost satisfaction of the voters",
-            "short_name": "avg_rel_cost_satisfaction",
+            "short_name": "avg_relcost_sat",
             "inner_type": "float",
             "range": "01",
             "order_priority": order_priority,
@@ -632,7 +632,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         name="Category proportionality",
         defaults={
             "description": "",
-            "short_name": "category_proportionality",
+            "short_name": "category_prop",
             "inner_type": "float",
             "range": "01",
             "order_priority": order_priority,
@@ -695,7 +695,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         name="Median selected cost",
         defaults={
             "description": "",
-            "short_name": "median_selected_cost",
+            "short_name": "med_select_cost",
             "inner_type": "float",
             "range": "0-",
             "order_priority": order_priority,
@@ -713,7 +713,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         name="Aggregated normalized cost satisfaction distribution",
         defaults={
             "description": "The relative number of voters being x %% satisfied for x being 0, 0-5, 5-10, ..., 95-100.",
-            "short_name": "aggregated_norm_cost_satisfaction",
+            "short_name": "agg_nrmcost_sat",
             "inner_type": "list[float]",
             "range": "01",
             "order_priority": order_priority,
