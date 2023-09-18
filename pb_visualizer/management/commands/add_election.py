@@ -405,7 +405,7 @@ class Command(BaseCommand):
         parser.add_argument('-d', nargs='*', type=str, help='specify the directory to take .pb files from')
         parser.add_argument('-f', nargs='*', type=str, help='specify a single .pb file')
         parser.add_argument('-o', '--overwrite', nargs='?', type=bool, const=True, default=False, help='overwrite existing elections')
-        # parser.add_argument('--all', action='store_true')
+        parser.add_argument('--rm', action='store_true', help='deletes the files after adding the election')
 
     def handle(self, *args, **options):
         if not options['d'] and not options['f']:
@@ -475,6 +475,8 @@ class Command(BaseCommand):
                     try:
                         # Actually adding the dataset
                         add_dataset(file_path, options['overwrite'], options['verbosity'])
+                        if options['rm']:
+                            os.remove(file_path)
                         log.append(" ... done.</li>\n")
                     except Exception as e:
                         # If something happened, we log it and move on
