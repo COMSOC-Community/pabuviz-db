@@ -157,7 +157,7 @@ def initialize_election_metadata(ballot_type_objs):
     # election analysis
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="sum_project_cost",
+        short_name="sum_proj_cost",
         defaults={
             "name": "total cost of all projects",
             "description": "total sum of the costs of all projects",
@@ -172,7 +172,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="funding_scarcity",
+        short_name="fund_scarc",
         defaults={
             "name": "funding scarcity",
             "description": "funding scarcity is given as the ratio of the total project cost to the budget limit",
@@ -187,7 +187,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="avg_project_cost",
+        short_name="avg_proj_cost",
         defaults={
             "name": "average project cost",
             "description": "average cost of all the projects",
@@ -202,7 +202,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="median_project_cost",
+        short_name="med_proj_cost",
         defaults={
             "name": "median project cost",
             "description": "median cost of all the projects",
@@ -217,7 +217,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="std_dev_project_cost",
+        short_name="sd_proj_cost",
         defaults={
             "name": "standard deviation of project costs",
             "description": "standard deviation of the cost of all the projects",
@@ -232,7 +232,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="avg_ballot_length",
+        short_name="avg_ballot_len",
         defaults={
             "name": "average ballot length",
             "description": "average length of all submitted ballots",
@@ -247,7 +247,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="median_ballot_length",
+        short_name="med_ballot_len",
         defaults={
             "name": "median ballot length",
             "description": "median length of all submitted ballots",
@@ -274,7 +274,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="median_ballot_cost",
+        short_name="med_ballot_cost",
         defaults={
             "name": "median ballot cost",
             "description": "median cost of all submitted ballots",
@@ -286,7 +286,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="avg_approval_score",
+        short_name="avg_app_score",
         defaults={
             "name": "average approval score",
             "description": "average number of approvals over all the projects",
@@ -298,7 +298,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="median_approval_score",
+        short_name="med_app_score",
         defaults={
             "name": "median approval score",
             "description": "median number of approvals over all the projects",
@@ -323,7 +323,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="median_total_score",
+        short_name="med_total_score",
         defaults={
             "name": "median total project score",
             "description": "median total score of all the projects",
@@ -512,7 +512,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         name="Average cardinality satisfaction",
         defaults={
             "description": "The average number of approved projects chosen by the rule over all voters.",
-            "short_name": "avg_card_satisfaction",
+            "short_name": "avg_card_sat",
             "inner_type": "float",
             "range": "0-",
             "order_priority": order_priority,
@@ -530,7 +530,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         defaults={
             "description": "The average number of approved projects chosen by the rule over all voters,"
                            "normalized by the maximum number of projects that could be chosen w.r.t. the budget limit.",
-            "short_name": "avg_norm_card_satisfaction",
+            "short_name": "avg_nrmcard_sat",
             "inner_type": "float",
             "range": "01",
             "order_priority": order_priority,
@@ -547,7 +547,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         name="Average relative cardinality satisfaction",
         defaults={
             "description": "The average relative number of approved project chosen by the rule over all voters.",
-            "short_name": "avg_rel_card_satisfaction",
+            "short_name": "avg_relcard_sat",
             "inner_type": "float",
             "range": "01",
             "order_priority": order_priority,
@@ -564,7 +564,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         name="Average cost satisfaction",
         defaults={
             "description": "The average cost satisfaction of the voters",
-            "short_name": "avg_cost_satisfaction",
+            "short_name": "avg_cost_sat",
             "inner_type": "float",
             "range": "0-",
             "order_priority": order_priority,
@@ -582,7 +582,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         defaults={
             "description": "The average cost satisfaction of the voters,"
                            "normalized by the maximum possible budget allocation cost (w.r.t. the budget limit)",
-            "short_name": "avg_norm_cost_satisfaction",
+            "short_name": "avg_nrmcost_sat",
             "inner_type": "float",
             "range": "01",
             "order_priority": order_priority,
@@ -599,7 +599,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         name="Average relative cost satisfaction",
         defaults={
             "description": "The average relative cost satisfaction of the voters",
-            "short_name": "avg_rel_cost_satisfaction",
+            "short_name": "avg_relcost_sat",
             "inner_type": "float",
             "range": "01",
             "order_priority": order_priority,
@@ -616,7 +616,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         name="Category proportionality",
         defaults={
             "description": "",
-            "short_name": "category_proportionality",
+            "short_name": "category_prop",
             "inner_type": "float",
             "range": "01",
             "order_priority": order_priority,
@@ -679,7 +679,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         name="Median selected cost",
         defaults={
             "description": "",
-            "short_name": "median_selected_cost",
+            "short_name": "med_select_cost",
             "inner_type": "float",
             "range": "0-",
             "order_priority": order_priority,
@@ -697,7 +697,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         name="Aggregated normalized cost satisfaction distribution",
         defaults={
             "description": "The relative number of voters being x %% satisfied for x being 0, 0-5, 5-10, ..., 95-100.",
-            "short_name": "aggregated_norm_cost_satisfaction",
+            "short_name": "agg_nrmcost_sat",
             "inner_type": "list[float]",
             "range": "01",
             "order_priority": order_priority,
