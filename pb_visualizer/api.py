@@ -210,12 +210,12 @@ def get_satisfaction_histogram(rule_abbr_list: Iterable[str],
                                election_filters: dict = {}
                                ) -> dict[str, list[float]]:
     data_dict = get_rule_result_average_data_properties(rule_abbr_list,
-                                                        ['aggregated_norm_cost_satisfaction', 'avg_norm_cost_satisfaction'],
+                                                        ['agg_nrmcost_sat', 'avg_nrmcost_sat'],
                                                         election_filters=election_filters)
     data_dict['data'] = {
         rule: {
-            'hist_data': data_dict['data'][rule]['aggregated_norm_cost_satisfaction'],
-            'avg': data_dict['data'][rule]['avg_norm_cost_satisfaction']
+            'hist_data': data_dict['data'][rule]['agg_nrmcost_sat'],
+            'avg': data_dict['data'][rule]['avg_nrmcost_sat']
             }
         for rule in  data_dict['data']
     }
