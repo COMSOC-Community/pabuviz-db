@@ -187,7 +187,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="avg_project_cost",
+        short_name="avg_proj_cost",
         defaults={
             "name": "average project cost",
             "description": "average cost of all the projects",
@@ -202,7 +202,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="median_project_cost",
+        short_name="med_proj_cost",
         defaults={
             "name": "median project cost",
             "description": "median cost of all the projects",
@@ -217,7 +217,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="std_dev_project_cost",
+        short_name="sd_proj_cost",
         defaults={
             "name": "standard deviation of project costs",
             "description": "standard deviation of the cost of all the projects",
@@ -232,7 +232,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="avg_ballot_length",
+        short_name="avg_ballot_len",
         defaults={
             "name": "average ballot length",
             "description": "average length of all submitted ballots",
@@ -247,7 +247,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="median_ballot_length",
+        short_name="med_ballot_len",
         defaults={
             "name": "median ballot length",
             "description": "median length of all submitted ballots",
@@ -274,7 +274,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="median_ballot_cost",
+        short_name="med_ballot_cost",
         defaults={
             "name": "median ballot cost",
             "description": "median cost of all submitted ballots",
@@ -286,7 +286,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="avg_approval_score",
+        short_name="avg_app_score",
         defaults={
             "name": "average approval score",
             "description": "average number of approvals over all the projects",
@@ -298,7 +298,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="median_approval_score",
+        short_name="med_app_score",
         defaults={
             "name": "median approval score",
             "description": "median number of approvals over all the projects",
@@ -323,7 +323,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="median_total_score",
+        short_name="med_total_score",
         defaults={
             "name": "median total project score",
             "description": "median total score of all the projects",
