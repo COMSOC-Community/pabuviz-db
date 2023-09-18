@@ -246,7 +246,7 @@ class Project(models.Model):
                                   help_text="project id specific to the election")
     cost = models.DecimalField(max_digits=15,
                                decimal_places=2)
-    name = models.CharField(max_length=100)  # TODO: not obligatory in pabulib standard
+    name = models.TextField()  # TODO: not obligatory in pabulib standard
     description = models.TextField(default="")  # TODO: not in pabulib standard
     election = models.ForeignKey(Election,
                                  on_delete=models.CASCADE,
