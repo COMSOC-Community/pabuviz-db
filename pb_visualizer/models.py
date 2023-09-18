@@ -27,7 +27,7 @@ from .choices import *
 #         return self.name
 
 class BallotType(models.Model):
-    name = models.CharField(max_length=50,
+    name = models.CharField(max_length=20,
                             unique=True, 
                             primary_key=True)
     description = models.TextField()
@@ -198,7 +198,7 @@ class Election(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=30)
     election = models.ForeignKey(Election,
                                  on_delete=models.CASCADE,
                                  related_name="categories")
@@ -208,7 +208,7 @@ class Category(models.Model):
 
 
 class Target(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=30)
     election = models.ForeignKey(Election,
                                  on_delete=models.CASCADE,
                                  related_name="targets")
@@ -218,7 +218,7 @@ class Target(models.Model):
 
 
 class Neighborhood(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=30)
     election = models.ForeignKey(Election,
                                  on_delete=models.CASCADE,
                                  related_name="neighborhoods")
@@ -228,7 +228,7 @@ class Neighborhood(models.Model):
 
 
 class VotingMethod(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=30)
     election = models.ForeignKey(Election,
                                  on_delete=models.CASCADE,
                                  related_name="voting_methods")
@@ -241,7 +241,7 @@ class VotingMethod(models.Model):
 
 class Project(models.Model):
     # rule data
-    project_id = models.CharField(max_length=50,
+    project_id = models.CharField(max_length=30,
                                   verbose_name="project id",
                                   help_text="project id specific to the election")
     cost = models.DecimalField(max_digits=15,
@@ -264,12 +264,12 @@ class Project(models.Model):
 
 
 class Voter(models.Model):
-    voter_id = models.CharField(max_length=50,
+    voter_id = models.CharField(max_length=30,
                                 verbose_name="voter id",
                                 help_text="voter id specific to the election")
     age = models.IntegerField(blank=True,
                               null=True)
-    gender = models.CharField(max_length=50,
+    gender = models.CharField(max_length=30,
                               choices=GENDER,
                               blank=True)
     voting_method = models.ForeignKey(VotingMethod,
@@ -309,11 +309,12 @@ class PreferenceInfo(models.Model):
 class ElectionMetadata(models.Model):
     name = models.CharField(max_length=100,
                             unique=True)
-    short_name = models.CharField(max_length=50,
-                                  unique=True)
+    short_name = models.CharField(max_length=30,
+                                  unique=True,
+                                  primary_key=True)
     description = models.TextField()
     
-    inner_type = models.CharField(max_length=50,
+    inner_type = models.CharField(max_length=30,
                                   choices=INNER_TYPE)
     # range = models.CharField(max_length=10)
     order_priority = models.IntegerField()
@@ -372,10 +373,11 @@ class RuleResult(models.Model):
 class RuleResultMetadata(models.Model):
     name = models.CharField(max_length=100,
                             unique=True)
-    short_name = models.CharField(max_length=50,
-                                  unique=True)
+    short_name = models.CharField(max_length=30,
+                                  unique=True,
+                                  primary_key=True)
     description = models.TextField()
-    inner_type = models.CharField(max_length=50,
+    inner_type = models.CharField(max_length=30,
                                   choices=INNER_TYPE)
     range = models.CharField(max_length=10)
     order_priority = models.IntegerField()

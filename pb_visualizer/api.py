@@ -171,10 +171,11 @@ def get_rule_result_average_data_properties(rule_abbr_list: Iterable[str],
     election_query_set = filter_elections(**election_filters)
     election_query_set = filter_elections_by_rule_properties(election_query_set,
                                                              rule_abbr_list=rule_abbr_list,
-                                                             property_short_names=property_short_names)
+                                                             property_short_names=property_short_names)    
     rule_result_data_property_query_set = RuleResultDataProperty.objects.all().filter(
         rule_result__election__in=election_query_set
     )
+
 
     data_dict = {}
     for rule in rule_abbr_list:
@@ -213,7 +214,6 @@ def get_satisfaction_histogram(rule_abbr_list: Iterable[str],
     data_dict = get_rule_result_average_data_properties(rule_abbr_list,
                                                         ['aggregated_norm_cost_satisfaction', 'avg_norm_cost_satisfaction'],
                                                         election_filters=election_filters)
-    
     data_dict['data'] = {
         rule: {
             'hist_data': data_dict['data'][rule]['aggregated_norm_cost_satisfaction'],
@@ -259,6 +259,7 @@ def get_election_property_histogram(election_property_short_name: str,
         )
 
     election_property = get_filterable_election_property_list([election_property_short_name])['data'][0]
+    
     return {
         'data': hist_data,
         'meta_data': {
@@ -293,6 +294,7 @@ def histogram_data_from_query_set_and_field(query_set: QuerySet,
             values = [query_set.count()]
         return {
             'bins': [min_value, min_value],
+            'bin_midpoints': [min_value],
             'values': values
         }
 
@@ -326,7 +328,6 @@ def histogram_data_from_query_set_and_field(query_set: QuerySet,
         'bin_midpoints': bin_midpoints,
         'values': histogram_data_values
     }
-
     return histogram_data
 
 

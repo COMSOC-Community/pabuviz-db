@@ -331,7 +331,7 @@ def add_dataset(file_path: str,
             raise Exception("Election with same name already exists")
 
 
-    if verbosity > 1: print("creating election object...")
+    if verbosity > 1: print("creating election object {}".format(election_info['defaults']['name']))
     election_obj = Election.objects.create(**election_info['defaults'])
 
     # create election data properties
