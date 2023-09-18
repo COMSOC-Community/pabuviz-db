@@ -157,7 +157,7 @@ def initialize_election_metadata(ballot_type_objs):
     # election analysis
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="sum_project_cost",
+        short_name="sum_proj_cost",
         defaults={
             "name": "total cost of all projects",
             "description": "total sum of the costs of all projects",
