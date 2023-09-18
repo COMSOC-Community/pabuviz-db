@@ -88,7 +88,7 @@ class Rule(models.Model):
 
 class Election(models.Model):
     # Election data
-    name = models.CharField(max_length=50)
+    name = models.TextField()
     description = models.TextField(blank=True)
     country = models.CharField(max_length=50,
                                blank=True)
