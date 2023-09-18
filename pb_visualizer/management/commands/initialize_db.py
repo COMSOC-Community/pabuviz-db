@@ -172,7 +172,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     order_priority += 1
     election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
-        short_name="funding_scarcity",
+        short_name="fund_scarc",
         defaults={
             "name": "funding scarcity",
             "description": "funding scarcity is given as the ratio of the total project cost to the budget limit",
