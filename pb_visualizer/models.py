@@ -198,7 +198,7 @@ class Election(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=50)
     election = models.ForeignKey(Election,
                                  on_delete=models.CASCADE,
                                  related_name="categories")
@@ -208,7 +208,7 @@ class Category(models.Model):
 
 
 class Target(models.Model):
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=50)
     election = models.ForeignKey(Election,
                                  on_delete=models.CASCADE,
                                  related_name="targets")
@@ -218,7 +218,7 @@ class Target(models.Model):
 
 
 class Neighborhood(models.Model):
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=50)
     election = models.ForeignKey(Election,
                                  on_delete=models.CASCADE,
                                  related_name="neighborhoods")
@@ -228,7 +228,7 @@ class Neighborhood(models.Model):
 
 
 class VotingMethod(models.Model):
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=50)
     election = models.ForeignKey(Election,
                                  on_delete=models.CASCADE,
                                  related_name="voting_methods")
