@@ -40,7 +40,7 @@ class RuleFamily(models.Model):
     # rule data
     name = models.CharField(max_length=50,
                             unique=True)
-    abbreviation = models.SlugField(max_length=15,
+    abbreviation = models.SlugField(max_length=25,
                                     unique=True,
                                     verbose_name="abbreviation", 
                                     primary_key=True)
@@ -60,7 +60,7 @@ class Rule(models.Model):
     # rule data
     name = models.CharField(max_length=50,
                             unique=True)
-    abbreviation = models.SlugField(max_length=15,
+    abbreviation = models.SlugField(max_length=25,
                                     unique=True,
                                     verbose_name="abbreviation", 
                                     primary_key=True)
@@ -309,7 +309,7 @@ class PreferenceInfo(models.Model):
 class ElectionMetadata(models.Model):
     name = models.CharField(max_length=50,
                             unique=True)
-    short_name = models.CharField(max_length=15,
+    short_name = models.CharField(max_length=25,
                                   unique=True,
                                   primary_key=True)
     description = models.TextField()
@@ -373,7 +373,7 @@ class RuleResult(models.Model):
 class RuleResultMetadata(models.Model):
     name = models.CharField(max_length=100,
                             unique=True)
-    short_name = models.CharField(max_length=15,
+    short_name = models.CharField(max_length=25,
                                   unique=True,
                                   primary_key=True)
     description = models.TextField()
