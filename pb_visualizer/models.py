@@ -40,7 +40,7 @@ class RuleFamily(models.Model):
     # rule data
     name = models.CharField(max_length=30,
                             unique=True)
-    abbreviation = models.SlugField(max_length=10,
+    abbreviation = models.SlugField(max_length=15,
                                     unique=True,
                                     verbose_name="abbreviation", 
                                     primary_key=True)
@@ -60,7 +60,7 @@ class Rule(models.Model):
     # rule data
     name = models.CharField(max_length=30,
                             unique=True)
-    abbreviation = models.SlugField(max_length=10,
+    abbreviation = models.SlugField(max_length=15,
                                     unique=True,
                                     verbose_name="abbreviation", 
                                     primary_key=True)
