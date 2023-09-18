@@ -13,7 +13,7 @@ def project_object_to_pabutools(project: Project):
                               [target.name for target in project.targets.all()])
 
 
-def election_object_to_pabutools(election: Election) -> tuple[pbelection.Instance, pbelection.Profile]:         # TODO: write tests
+def election_object_to_pabutools(election: Election) -> tuple[pbelection.Instance, pbelection.Profile]:
     categories = {cat.name for cat in election.categories.all()}
     targets = {tar.name for tar in election.targets.all()}
     projects = {project.project_id: project_object_to_pabutools(project) for project in election.projects.all()}

@@ -16,6 +16,67 @@ from pabutools.election.instance import max_budget_allocation_cardinality, max_b
 import pabutools.fractions as fractions
 
 
+instance_property_mapping = {
+    "sum_proj_cost": instanceproperties.sum_project_cost,
+    "fund_scarc": instanceproperties.funding_scarcity,
+    "avg_proj_cost": instanceproperties.avg_project_cost,
+    "med_proj_cost": instanceproperties.median_project_cost,
+    "sd_proj_cost": instanceproperties.std_dev_project_cost
+}
+
+profile_property_mapping = {
+    "avg_ballot_len": profileproperties.avg_ballot_length, 
+    "med_ballot_len": profileproperties.median_ballot_length, 
+    "avg_ballot_cost": profileproperties.avg_ballot_cost, 
+    "med_ballot_cost": profileproperties.median_ballot_cost, 
+    "avg_app_score":  profileproperties.avg_approval_score,
+    "med_app_score":  profileproperties.median_approval_score,
+    "avg_total_score": profileproperties.avg_total_score, 
+    "med_total_score": profileproperties.median_total_score, 
+}
+
+satisfaction_property_mapping = {
+    "avg_card_sat": {'sat_class': Cardinality_Sat, 'normalizer_func': None},
+    "avg_cost_sat": {'sat_class': Cost_Sat, 'normalizer_func': None},
+    "avg_nrmcard_sat": {'sat_class': Cardinality_Sat, 'normalizer_func': max_budget_allocation_cardinality},
+    "avg_nrmcost_sat": {'sat_class': Cost_Sat, 'normalizer_func': max_budget_allocation_cost},
+    "avg_relcard_sat": {'sat_class': Relative_Cardinality_Sat, 'normalizer_func': None},
+    "avg_relcost_sat": {'sat_class': Relative_Cost_Approx_Normaliser_Sat, 'normalizer_func': None},
+    "happiness": {'sat_class': CC_Sat, 'normalizer_func': None},
+}
+
+gini_property_mapping = {
+    "equality": Cost_Sat,
+    # "fairness": Effort_Sat,
+}
+
+def rule_mapping(budget):
+    return {
+        'greedy_card': {'func': rules.greedy_utilitarian_welfare, 'params': {'sat_class': Cardinality_Sat}},
+        'greedy_cost': {'func': rules.greedy_utilitarian_welfare, 'params': {'sat_class': Cost_Sat}},
+        'greedy_cc': {'func': rules.greedy_utilitarian_welfare, 'params': {'sat_class': CC_Sat}},
+        'max_card': {'func': rules.max_additive_utilitarian_welfare, 'params': {'sat_class': Cardinality_Sat}},
+        'max_cost': {'func': rules.max_additive_utilitarian_welfare, 'params': {'sat_class': Cost_Sat}},
+        'mes_uncompleted': {'func': rules.method_of_equal_shares, 'params': {'sat_class': Cost_Sat}},
+        'mes': {'func': rules.completion_by_rule_combination, 'params': {
+            'rule_sequence': [rules.exhaustion_by_budget_increase, rules.greedy_utilitarian_welfare],
+            'rule_params': [
+                {
+                    'rule': rules.method_of_equal_shares, 
+                    'rule_params': {'sat_class': Cost_Sat}, 
+                    'budget_step': float(budget)/100
+                },
+                {"sat_class": Cost_Sat},
+            ]
+        }},
+        'mes_greedy_app': {'func': rules.completion_by_rule_combination, 'params': {
+            'rule_sequence': [rules.method_of_equal_shares, rules.greedy_utilitarian_welfare],
+            'rule_params': [{'sat_class': Cost_Sat}, {'sat_class': Cardinality_Sat}]
+        }},
+        'seq_phragmen': {'func': rules.sequential_phragmen, 'params': {}}
+    }
+    
+
 
 def print_if_verbose(string, required_verbosity=1, verbosity=1., persist=False):
     if verbosity < required_verbosity:
@@ -26,12 +87,10 @@ def print_if_verbose(string, required_verbosity=1, verbosity=1., persist=False):
         print(string.ljust(80))
 
 
-
 def exists_in_database(model_class: type[Model],
                        **filters):
     query = model_class.objects.filter(**filters)
     return query.exists()
-
 
 
 class LazyElectionParser():
@@ -53,8 +112,6 @@ class LazyElectionParser():
     
 
 
-
-
 def compute_election_properties(election_parser: LazyElectionParser,
                                 overwrite: bool = False,
                                 verbosity: int = 1
@@ -62,40 +119,26 @@ def compute_election_properties(election_parser: LazyElectionParser,
     election_obj = election_parser.get_election_obj()
 
     # we first compute the instance properties
-    for instance_property in ["sum_project_cost",
-                              "funding_scarcity",
-                              "avg_project_cost",
-                              "median_project_cost",
-                              "std_dev_project_cost"]:
-
+    for instance_property in instance_property_mapping:
         metadata_obj = ElectionMetadata.objects.get(short_name=instance_property)
         if metadata_obj.applies_to_election(election_obj):
             unique_filters = {'election': election_obj,
                               'metadata': metadata_obj}
             if overwrite or not exists_in_database(ElectionDataProperty, **unique_filters):
-                property_func = getattr(instanceproperties, instance_property)
                 instance, profile = election_parser.get_parsed_election()
                 ElectionDataProperty.objects.update_or_create(**unique_filters,
-                                                              defaults={"value": property_func(instance)}) 
+                                                              defaults={"value": instance_property_mapping[instance_property](instance)}) 
 
     # we now compute the profile properties
-    for profile_property in ["avg_ballot_length",
-                             "median_ballot_length",
-                             "avg_ballot_cost",
-                             "median_ballot_cost",
-                             "avg_approval_score",
-                             "median_approval_score",
-                             "avg_total_score",
-                             "median_total_score"]:
+    for profile_property in profile_property_mapping:
         metadata_obj = ElectionMetadata.objects.get(short_name=profile_property)
         if metadata_obj.applies_to_election(election_obj):
             unique_filters = {'election': election_obj,
                               'metadata': metadata_obj}
             if overwrite or not exists_in_database(ElectionDataProperty, **unique_filters):
-                property_func = getattr(profileproperties, profile_property)
                 instance, profile = election_parser.get_parsed_election()
                 ElectionDataProperty.objects.update_or_create(**unique_filters,
-                                                              defaults={"value": property_func(instance, profile)}) 
+                                                              defaults={"value": profile_property_mapping[profile_property](instance, profile)}) 
 
 
 def compute_election_results(election_parser: LazyElectionParser,
@@ -105,33 +148,8 @@ def compute_election_results(election_parser: LazyElectionParser,
                              ) -> None:
     election_obj = election_parser.get_election_obj()
 
-    rule_parameters = {
-        'greedy_card': {'func': rules.greedy_utilitarian_welfare, 'params': {'sat_class': Cardinality_Sat}},
-        'greedy_cost': {'func': rules.greedy_utilitarian_welfare, 'params': {'sat_class': Cost_Sat}},
-        'greedy_cc': {'func': rules.greedy_utilitarian_welfare, 'params': {'sat_class': CC_Sat}},
-        'max_card': {'func': rules.max_additive_utilitarian_welfare, 'params': {'sat_class': Cardinality_Sat}},
-        'max_cost': {'func': rules.max_additive_utilitarian_welfare, 'params': {'sat_class': Cost_Sat}},
-        'mes_uncompleted': {'func': rules.method_of_equal_shares, 'params': {'sat_class': Cost_Sat}},
-        'mes': {'func': rules.completion_by_rule_combination, 'params': {
-            'rule_sequence': [rules.exhaustion_by_budget_increase, rules.greedy_utilitarian_welfare],
-            'rule_params': [
-                {
-                    'rule': rules.method_of_equal_shares, 
-                    'rule_params': {'sat_class': Cost_Sat}, 
-                    'budget_step': float(election_obj.budget)/100
-                },
-                {"sat_class": Cost_Sat},
-            ]
-        }},
-        'mes_greedy_app': {'func': rules.completion_by_rule_combination, 'params': {
-            'rule_sequence': [rules.method_of_equal_shares, rules.greedy_utilitarian_welfare],
-            'rule_params': [{'sat_class': Cost_Sat}, {'sat_class': Cardinality_Sat}]
-        }},
-        'seq_phragmen': {'func': rules.sequential_phragmen, 'params': {}}
-    }
-    
-
-    for rule in rule_parameters:
+    rules = rule_mapping(election_obj.budget)
+    for rule in rules:
         if rule_list == None or rule in rule_list:
             rule_obj = Rule.objects.get(abbreviation=rule)
             if (rule_obj.applies_to_election(election_obj)):
@@ -141,10 +159,10 @@ def compute_election_results(election_parser: LazyElectionParser,
                     print_if_verbose("Computing {}.".format(rule), 2, verbosity)
                     rule_result_obj, _ = RuleResult.objects.update_or_create(**unique_filters)
                     instance, profile = election_parser.get_parsed_election()
-                    pabutools_result = rule_parameters[rule]['func'](
+                    pabutools_result = rules[rule]['func'](
                         instance,
                         profile,
-                        **rule_parameters[rule]['params']
+                        **rules[rule]['params']
                     )
                     rule_result_obj.selected_projects.set(
                         [Project.objects.get(election=election_obj, project_id=project.name) for project in pabutools_result]
@@ -162,17 +180,7 @@ def compute_rule_result_properties(election_parser: LazyElectionParser,
         print_if_verbose("Computing properties for {} results.".format(rule_result_object.rule.abbreviation), 2, verbosity)
         budget_allocation = [project_object_to_pabutools(project) for project in rule_result_object.selected_projects.all()]
 
-        satisfaction_properties = {
-            "avg_card_satisfaction": {'sat_class': Cardinality_Sat, 'normalizer_func': None},
-            "avg_cost_satisfaction": {'sat_class': Cost_Sat, 'normalizer_func': None},
-            "avg_norm_card_satisfaction": {'sat_class': Cardinality_Sat, 'normalizer_func': max_budget_allocation_cardinality},
-            "avg_norm_cost_satisfaction": {'sat_class': Cost_Sat, 'normalizer_func': max_budget_allocation_cost},
-            "avg_rel_card_satisfaction": {'sat_class': Relative_Cardinality_Sat, 'normalizer_func': None},
-            "avg_rel_cost_satisfaction": {'sat_class': Relative_Cost_Approx_Normaliser_Sat, 'normalizer_func': None},
-            "happiness": {'sat_class': CC_Sat, 'normalizer_func': None},
-        }
-        
-        for property in satisfaction_properties:
+        for property in satisfaction_property_mapping:
             if rule_property_list == None or property in rule_property_list:
                 metadata_obj = RuleResultMetadata.objects.get(short_name=property)
                 if metadata_obj.applies_to_election(election_obj):
@@ -185,21 +193,16 @@ def compute_rule_result_properties(election_parser: LazyElectionParser,
                             instance,
                             profile,
                             budget_allocation,
-                            satisfaction_properties[property]['sat_class']
+                            satisfaction_property_mapping[property]['sat_class']
                         )
                         normalizer = 1
-                        if satisfaction_properties[property]['normalizer_func'] != None:
-                            normalizer = satisfaction_properties[property]['normalizer_func'](instance, instance.budget_limit)
+                        if satisfaction_property_mapping[property]['normalizer_func'] != None:
+                            normalizer = satisfaction_property_mapping[property]['normalizer_func'](instance, instance.budget_limit)
                             
                         RuleResultDataProperty.objects.update_or_create(**unique_filters,
                                                                         defaults={"value": str(float(value/normalizer))}) 
-            
-        gini_properties = {
-            "equality": Cost_Sat,
-            # "fairness": Effort_Sat,
-        }
 
-        for property in gini_properties:
+        for property in gini_property_mapping:
             if rule_property_list == None or property in rule_property_list:
                 metadata_obj = RuleResultMetadata.objects.get(short_name=property)
                 if metadata_obj.applies_to_election(election_obj):
@@ -212,13 +215,13 @@ def compute_rule_result_properties(election_parser: LazyElectionParser,
                             instance,
                             profile,
                             budget_allocation,
-                            gini_properties[property],
+                            gini_property_mapping[property],
                             invert=True
                         )
                         RuleResultDataProperty.objects.update_or_create(**unique_filters,
                                                                         defaults={"value": str(float(value))})
 
-        property = "category_proportionality"
+        property = "category_prop"
         if rule_property_list == None or property in rule_property_list:
             metadata_obj = RuleResultMetadata.objects.get(short_name=property)
             if metadata_obj.applies_to_election(election_obj) and election_obj.has_categories:
@@ -236,7 +239,7 @@ def compute_rule_result_properties(election_parser: LazyElectionParser,
                                                                     defaults={"value": str(float(value))}) 
     
         if len(budget_allocation) > 0:
-            property = "median_selected_cost"
+            property = "med_select_cost"
             if rule_property_list == None or property in rule_property_list:
                 metadata_obj = RuleResultMetadata.objects.get(short_name=property)
                 if metadata_obj.applies_to_election(election_obj):
@@ -248,7 +251,7 @@ def compute_rule_result_properties(election_parser: LazyElectionParser,
                         RuleResultDataProperty.objects.update_or_create(**unique_filters,
                                                                         defaults={"value": str(float(value))}) 
 
-        property = "aggregated_norm_cost_satisfaction"
+        property = "agg_nrmcost_sat"
         if rule_property_list == None or property in rule_property_list:    
             metadata_obj = RuleResultMetadata.objects.get(short_name=property)
             if metadata_obj.applies_to_election(election_obj):
@@ -298,7 +301,7 @@ def compute_properties(election_names=None,
             compute_rule_result_properties(election_parser, rule_properties, overwrite=overwrite, verbosity=verbosity)
 
 class Command(BaseCommand):
-    help = "TODO" # TODO
+    help = "compute all properties, rules and rule result properties for the elections in the database"
     
     def add_arguments(self, parser):
         parser.add_argument('-e','--election_names', nargs='*', type=str, default=None,

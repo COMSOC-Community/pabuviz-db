@@ -391,9 +391,7 @@ def initialize_rules(ballot_type_objs):
         }
     )
     rule_obj.applies_to.set([
-        ballot_type_objs["approval"],
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"]
+        ballot_type_objs["approval"]
     ])
 
     order_priority += 1
@@ -407,9 +405,7 @@ def initialize_rules(ballot_type_objs):
         }
     )
     rule_obj.applies_to.set([
-        ballot_type_objs["approval"],
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"]
+        ballot_type_objs["approval"]
     ])
 
     order_priority += 1
@@ -423,9 +419,7 @@ def initialize_rules(ballot_type_objs):
         }
     )
     rule_obj.applies_to.set([
-        ballot_type_objs["approval"],
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"]
+        ballot_type_objs["approval"]
     ])
 
     order_priority += 1
@@ -440,8 +434,6 @@ def initialize_rules(ballot_type_objs):
     )
     rule_obj.applies_to.set([
         ballot_type_objs["approval"],
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"]
     ])
 
     order_priority += 1
@@ -456,8 +448,6 @@ def initialize_rules(ballot_type_objs):
     )
     rule_obj.applies_to.set([
         ballot_type_objs["approval"],
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"]
     ])
 
     order_priority += 1
@@ -472,8 +462,6 @@ def initialize_rules(ballot_type_objs):
     )
     rule_obj.applies_to.set([
         ballot_type_objs["approval"],
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"]
     ])
     
     order_priority += 1
@@ -488,8 +476,6 @@ def initialize_rules(ballot_type_objs):
     )
     rule_obj.applies_to.set([
         ballot_type_objs["approval"],
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"]
     ])
     
     order_priority += 1
@@ -504,8 +490,6 @@ def initialize_rules(ballot_type_objs):
     )
     rule_obj.applies_to.set([
         ballot_type_objs["approval"],
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"]
     ])
 
     order_priority += 1

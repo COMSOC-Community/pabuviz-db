@@ -161,8 +161,6 @@ def get_filterable_election_property_list(property_short_names: Iterable[str], b
     return {'data': properties}
 
 
-
-
 def get_rule_result_average_data_properties(rule_abbr_list: Iterable[str],
                                             property_short_names: Iterable[str],
                                             election_filters: dict = {}
@@ -212,12 +210,12 @@ def get_satisfaction_histogram(rule_abbr_list: Iterable[str],
                                election_filters: dict = {}
                                ) -> dict[str, list[float]]:
     data_dict = get_rule_result_average_data_properties(rule_abbr_list,
-                                                        ['aggregated_norm_cost_satisfaction', 'avg_norm_cost_satisfaction'],
+                                                        ['agg_nrmcost_sat', 'avg_nrmcost_sat'],
                                                         election_filters=election_filters)
     data_dict['data'] = {
         rule: {
-            'hist_data': data_dict['data'][rule]['aggregated_norm_cost_satisfaction'],
-            'avg': data_dict['data'][rule]['avg_norm_cost_satisfaction']
+            'hist_data': data_dict['data'][rule]['agg_nrmcost_sat'],
+            'avg': data_dict['data'][rule]['avg_nrmcost_sat']
             }
         for rule in  data_dict['data']
     }
@@ -403,51 +401,83 @@ def filter_elections(election_query_set: QuerySet | None = None,
         elif election_property == "ballot_types":
             election_query_set = election_query_set.filter(ballot_type__in=election_filters[election_property])
         elif election_property in Election.public_fields:
-            type = _get_type_from_model_field(Election._meta.get_field(election_property))
-            if type == 'int' or type == 'float':
-                if 'min' in election_filters[election_property] and election_filters[election_property]['min'] != None:
-                    election_query_set = election_query_set.filter(
-                        **{election_property+"__gte": election_filters[election_property]['min']}
-                    )
-                if 'max' in election_filters[election_property] and election_filters[election_property]['max'] != None:
-                    election_query_set = election_query_set.filter(
-                        **{election_property+"__lte": election_filters[election_property]['max']}
-                    )
-            elif type == 'date':
-                if 'min' in election_filters[election_property] and election_filters[election_property]['min'] != None:
-                    election_query_set = election_query_set.filter(
-                        **{election_property+"__gte": datetime.date(election_filters[election_property]['min'])}
-                    )
-                if 'max' in election_filters[election_property] and election_filters[election_property]['max'] != None:
-                    election_query_set = election_query_set.filter(
-                        **{election_property+"__lte": datetime.date(election_filters[election_property]['max'])}
-                    )
-            elif type == 'bool':
-                if election_filters[election_property] != None:
-                    election_query_set = election_query_set.filter(
-                        **{election_property: election_filters[election_property]}
-                    )
-            else:
-                # other types not yet supported, if you add a field of a different type, write a filter here, TODO: add str filter
-                raise ValueError("Property type {} is not supported for filtering.".format(type))
-
-
-
+            election_query_set = _filter_elections_by_model_field(
+                election_query_set=election_query_set,
+                election_property=election_property,
+                election_property_filter=election_filters[election_property]
+            )
         elif ElectionMetadata.objects.all().filter(short_name=election_property).exists():
-            # no type check, because all meta properties are numbers
-            if 'min' in election_filters[election_property] and election_filters[election_property]['min'] != None:
-                election_query_set = election_query_set.filter(
-                    data_properties__metadata__short_name=election_property,
-                    data_properties__value__gte=election_filters[election_property]['min']
-                )
-            if 'max' in election_filters[election_property] and election_filters[election_property]['max'] != None:
-                election_query_set = election_query_set.filter(
-                    data_properties__metadata__short_name=election_property,
-                    data_properties__value__lte=election_filters[election_property]['max']
-                )
+            election_query_set = _filter_elections_by_metadata(
+                election_query_set=election_query_set,
+                election_property=election_property,
+                election_property_filter=election_filters[election_property]
+            )
         else:
             # property does not exist or is not allowed to be filtered through the api
             raise ValueError("Property {} does not exist or is not supported for filtering.".format(election_property))
+
+    return election_query_set
+
+
+def _filter_elections_by_model_field(election_query_set: QuerySet,
+                                     election_property: str,
+                                     election_property_filter
+                                     ) -> QuerySet:
+    type = _get_type_from_model_field(Election._meta.get_field(election_property))
+    if type == 'int' or type == 'float':
+        if 'min' in election_property_filter and election_property_filter['min'] != None:
+            election_query_set = election_query_set.filter(
+                **{election_property+"__gte": election_property_filter['min']}
+            )
+        if 'max' in election_property_filter and election_property_filter['max'] != None:
+            election_query_set = election_query_set.filter(
+                **{election_property+"__lte": election_property_filter['max']}
+            )
+    elif type == 'date':
+        if 'min' in election_property_filter and election_property_filter['min'] != None:
+            election_query_set = election_query_set.filter(
+                **{election_property+"__gte": datetime.date(election_property_filter['min'])}
+            )
+        if 'max' in election_property_filter and election_property_filter['max'] != None:
+            election_query_set = election_query_set.filter(
+                **{election_property+"__lte": datetime.date(election_property_filter['max'])}
+            )
+    elif type == 'bool':
+        if election_property_filter != None:
+            election_query_set = election_query_set.filter(
+                **{election_property: election_property_filter}
+            )
+    elif type == 'str':
+        if 'contains' in election_property_filter and election_property_filter['contains'] != None:
+            election_query_set = election_query_set.filter(
+                **{election_property+"__icontains": election_property_filter['contains']}
+            )
+        if 'equals' in election_property_filter and election_property_filter['equals'] != None:
+            election_query_set = election_query_set.filter(
+                **{election_property: election_property_filter['equals']}
+            )
+    else:
+        # other types not yet supported, if you add a field of a different type, write a filter here
+        raise ValueError("Property type {} is not supported for filtering.".format(type))
+    
+    return election_query_set
+
+
+def _filter_elections_by_metadata(election_query_set: QuerySet,
+                                  election_property: str,
+                                  election_property_filter
+                                  ) -> QuerySet:
+    # no type check, because all meta properties are numbers
+    if 'min' in election_property_filter and election_property_filter['min'] != None:
+        election_query_set = election_query_set.filter(
+            data_properties__metadata__short_name=election_property,
+            data_properties__value__gte=election_property_filter['min']
+        )
+    if 'max' in election_property_filter and election_property_filter['max'] != None:
+        election_query_set = election_query_set.filter(
+            data_properties__metadata__short_name=election_property,
+            data_properties__value__lte=election_property_filter['max']
+        )
 
     return election_query_set
 

@@ -12,7 +12,5 @@ class BuildElectionTestCase(TestCase):
         add_dataset("pb_visualizer/tests/test_files/test_file_approval.pb", None, verbosity=0)
         
     def test_election_object_to_pabutools(self):
-        """the actual # of projects and votes are used, not the ones given by the file"""
-
+        return
         # TODO
-

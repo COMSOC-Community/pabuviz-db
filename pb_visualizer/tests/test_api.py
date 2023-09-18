@@ -34,8 +34,8 @@ class TestApi(TestCase):
             greedy_result_obj = RuleResult.objects.create(rule=greedy_obj, election=election_obj)
             mes_result_obj = RuleResult.objects.create(rule=mes_obj, election=election_obj)
             
-            avg_cost_obj = RuleResultMetadata.objects.get(short_name='avg_cost_satisfaction')
-            avg_card_obj = RuleResultMetadata.objects.get(short_name='avg_card_satisfaction')
+            avg_cost_obj = RuleResultMetadata.objects.get(short_name='avg_cost_sat')
+            avg_card_obj = RuleResultMetadata.objects.get(short_name='avg_card_sat')
 
             if i == 1:
                 RuleResultDataProperty.objects.create(id=i*4+1, rule_result=greedy_result_obj, metadata=avg_cost_obj, value=str(i*4+1))
@@ -43,50 +43,50 @@ class TestApi(TestCase):
             RuleResultDataProperty.objects.create(id=i*4+3, rule_result=mes_result_obj, metadata=avg_cost_obj, value=str(i*4+3))
             RuleResultDataProperty.objects.create(id=i*4+4, rule_result=mes_result_obj, metadata=avg_card_obj, value=str(i*4+4))
 
-            avg_ballot_length_obj = ElectionMetadata.objects.get(short_name="avg_ballot_length")
-            ElectionDataProperty.objects.create(id=i, metadata=avg_ballot_length_obj, election=election_obj, value=float(i))
+            avg_ballot_len_obj = ElectionMetadata.objects.get(short_name="avg_ballot_len")
+            ElectionDataProperty.objects.create(id=i, metadata=avg_ballot_len_obj, election=election_obj, value=float(i))
 
             avg_ballot_cost_obj = ElectionMetadata.objects.get(short_name="avg_ballot_cost")
             ElectionDataProperty.objects.create(id=i+10, metadata=avg_ballot_cost_obj, election=election_obj, value=float(i**2))
                
-        election_query_set = Election.objects.all()
-        election_query_set = filter_elections(election_query_set,
-                                              num_votes={'min': 10},
+        election_query_set = filter_elections(num_votes={'min': 10},
                                               num_projects={'max': 8})
         
         assert(len(election_query_set) == 1)
         assert(election_query_set.first().name == "e1")
         
-        election_query_set = Election.objects.all()
-        election_query_set = filter_elections(election_query_set,
-                                              num_votes={'max': 1000},
+        election_query_set = filter_elections(num_votes={'max': 1000},
                                               num_projects={'min': 4},
                                               budget={'min': 200})
         assert(len(election_query_set) == 1)
         assert(election_query_set.first().name == "e2")
 
-        election_query_set = Election.objects.all()
-        election_query_set = filter_elections(election_query_set,
-                                              budget={'max': 200})
+        election_query_set = filter_elections(budget={'max': 200})
         assert(len(election_query_set) == 3)
 
-        election_query_set = Election.objects.all()
-        election_query_set = filter_elections(election_query_set,
-                                              ballot_types=['ordinal', 'approval'])
+        election_query_set = filter_elections(ballot_types=['ordinal', 'approval'])
         assert(len(election_query_set) == 3)
 
-        prop_list = ['avg_card_satisfaction', 'avg_cost_satisfaction']
+        prop_list = ['avg_card_sat', 'avg_cost_sat']
         rule_list = ['mes', 'greedy_cost']
 
-        election_query_set = Election.objects.all()
-        election_query_set = filter_elections(election_query_set,
-                                              avg_ballot_length={'min': 1})
+        election_query_set = filter_elections(avg_ballot_len={'min': 1})
         assert(len(election_query_set) == 2)
         election_query_set = filter_elections(election_query_set,
-                                              avg_ballot_length={'max': 1})
+                                              avg_ballot_len={'max': 1})
         assert(len(election_query_set) == 1)
         assert(election_query_set.first().name == "e1")
 
+        election_query_set = filter_elections(name={'contains': 'e'})
+        assert(len(election_query_set) == 3)
+
+        election_query_set = filter_elections(name={'contains': 'e2'})
+        assert(len(election_query_set) == 1)
+        assert(election_query_set.first().name == "e2")
+
+        election_query_set = filter_elections(name={'equals': 'e1'})
+        assert(len(election_query_set) == 1)
+        assert(election_query_set.first().name == "e1")
 
         election_query_set = Election.objects.all()
         election_query_set = filter_elections_by_rule_properties(election_query_set,
@@ -106,8 +106,8 @@ class TestApi(TestCase):
             greedy_result_obj = RuleResult.objects.create(rule=greedy_obj, election=election_obj)
             mes_result_obj = RuleResult.objects.create(rule=mes_obj, election=election_obj)
                         
-            avg_cost_obj = RuleResultMetadata.objects.get(short_name='avg_cost_satisfaction')
-            avg_card_obj = RuleResultMetadata.objects.get(short_name='avg_card_satisfaction')
+            avg_cost_obj = RuleResultMetadata.objects.get(short_name='avg_cost_sat')
+            avg_card_obj = RuleResultMetadata.objects.get(short_name='avg_card_sat')
 
             RuleResultDataProperty.objects.create(id=i*4+1, rule_result=greedy_result_obj, metadata=avg_cost_obj, value=str(i*4+1))
             RuleResultDataProperty.objects.create(id=i*4+2, rule_result=greedy_result_obj, metadata=avg_card_obj, value=str(i*4+2))
@@ -115,14 +115,14 @@ class TestApi(TestCase):
             RuleResultDataProperty.objects.create(id=i*4+4, rule_result=mes_result_obj, metadata=avg_card_obj, value=str(i*4+4))
 
 
-        prop_list = ['avg_card_satisfaction', 'avg_cost_satisfaction']
+        prop_list = ['avg_card_sat', 'avg_cost_sat']
         rule_list = ['mes', 'greedy_cost']
 
         avg_values = get_rule_result_average_data_properties(rule_list, prop_list)
         
         assert(avg_values['data'] == {
-            'greedy_cost': {'avg_card_satisfaction': 4, 'avg_cost_satisfaction': 3},
-            'mes':    {'avg_card_satisfaction': 6, 'avg_cost_satisfaction': 5},
+            'greedy_cost': {'avg_card_sat': 4, 'avg_cost_sat': 3},
+            'mes':    {'avg_card_sat': 6, 'avg_cost_sat': 5},
         })
         assert(avg_values['meta_data']['num_elections'] == 2)
 
@@ -138,8 +138,8 @@ class TestApi(TestCase):
             greedy_result_obj = RuleResult.objects.create(rule=greedy_obj, election=election_obj)
             mes_result_obj = RuleResult.objects.create(rule=mes_obj, election=election_obj)
                         
-            aggr_sat_obj = RuleResultMetadata.objects.get(short_name='aggregated_norm_cost_satisfaction')
-            avg_sat_obj = RuleResultMetadata.objects.get(short_name='avg_norm_cost_satisfaction')
+            aggr_sat_obj = RuleResultMetadata.objects.get(short_name='agg_nrmcost_sat')
+            avg_sat_obj = RuleResultMetadata.objects.get(short_name='avg_nrmcost_sat')
 
             if i == 0:
                 RuleResultDataProperty.objects.create(id=1, rule_result=greedy_result_obj, metadata=aggr_sat_obj, value=json.dumps([.5, .5, 0]))
@@ -163,16 +163,16 @@ class TestApi(TestCase):
     def test_get_election_property_histogram(self):
         for i in range(4):
             election_obj = Election.objects.create(id=i, budget=10**i, num_votes=i, ballot_type_id=('approval' if i < 2 else 'ordinal'))
-            avg_ballot_length_obj = ElectionMetadata.objects.get(short_name='avg_ballot_length')
-            ElectionDataProperty.objects.create(id=i, election=election_obj, metadata=avg_ballot_length_obj, value=i**2-i)
+            avg_ballot_len_obj = ElectionMetadata.objects.get(short_name='avg_ballot_len')
+            ElectionDataProperty.objects.create(id=i, election=election_obj, metadata=avg_ballot_len_obj, value=i**2-i)
                     
-        hist_data = get_election_property_histogram('avg_ballot_length', num_bins=4, log_scale=False)
+        hist_data = get_election_property_histogram('avg_ballot_len', num_bins=4, log_scale=False)
 
         assert(hist_data['data']['bins'] == [0, 1.5, 3, 4.5, 6])
         assert(hist_data['data']['bin_midpoints'] == [0.75, 2.25, 3.75, 5.25])
         assert(hist_data['data']['values'] == [2, 1, 0, 1])
 
-        hist_data = get_election_property_histogram('avg_ballot_length', num_bins=4, log_scale=False, election_filters={'budget': {'min': 11}})
+        hist_data = get_election_property_histogram('avg_ballot_len', num_bins=4, log_scale=False, election_filters={'budget': {'min': 11}})
 
         assert(hist_data['data']['bins'] == [2, 3, 4, 5, 6])
         assert(hist_data['data']['values'] == [1, 0, 0, 1])
@@ -187,7 +187,7 @@ class TestApi(TestCase):
             assert(hist_data['data']['bin_midpoints'][i] - 10**i*3.16227766017 < 0.00001)
         assert(hist_data['data']['values'] == [1, 1, 2])
 
-        hist_data = get_election_property_histogram('avg_ballot_length', num_bins=4, by_ballot_type=True, log_scale=False)
+        hist_data = get_election_property_histogram('avg_ballot_len', num_bins=4, by_ballot_type=True, log_scale=False)
         
         assert(hist_data['data']['bins'] == [0, 1.5, 3, 4.5, 6])
         assert(hist_data['data']['bin_midpoints'] == [0.75, 2.25, 3.75, 5.25])
