@@ -494,10 +494,6 @@ class Command(BaseCommand):
             log.append("</ul>\n<p>The datasets have been successfully added in ")
             log.append(str((timezone.now() - start_time).total_seconds() / 60))
             log.append(" minutes.</p>")
-
-            # Collecting the statics once everything has been done
-            if options['verbosity'] > 0: print("Finished, collecting statics")
-            management.call_command('collectstatic', no_input=False, verbosity=options['verbosity']-1)
         except Exception as e:
             # If anything happened during the execution, we log it and move on
             log.append("\n<p><strong>" + str(e) + "<br>\n" + str(traceback.format_exc()) + "</strong></p>")
