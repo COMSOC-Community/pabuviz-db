@@ -381,20 +381,24 @@ def add_dataset(file_path: str,
 
         if 'voting_method' in voters_info['voters_foreign_keys'][voter_id]:
             voters_info['voters_defaults'][voter_id]['voting_method'] = voting_methods_obj[voters_info['voters_foreign_keys'][voter_id]['voting_method']]
-        
+
         if 'neighborhood' in voters_info['voters_foreign_keys'][voter_id]:
-            voters_info['voters_defaults'][voter_id]['neighborhood'] = neighborhoods_obj[voters_info['voters_foreign_keys'][voter_id]['neighborhood']]
-        
-        voter_obj = Voter(election=election_obj, **voters_info['voters_defaults'][voter_id])
-        for project in voters_info['voters_foreign_keys'][voter_id]['votes']:
-            pref_info_objs.append(PreferenceInfo(voter=voter_obj,
-                                                 project=projects_obj[project],
-                                                 preference_strength=voters_info['voters_foreign_keys'][voter_id]['votes'][project]))
+            voters_info['voters_defaults'][voter_id]['neighborhood'] = neighborhoods_obj[
+                voters_info['voters_foreign_keys'][voter_id]['neighborhood']]
+
+        voter_obj = Voter.objects.create(election=election_obj, **voters_info['voters_defaults'][voter_id])
         voters_objs.append(voter_obj)
 
     if verbosity > 1: print("~10 %  ", end="\r")
-    Voter.objects.bulk_create(voters_objs)
-    
+
+    pref_info_objs = []
+    for index, voter_id in enumerate(voters_info['voters_defaults']):
+        for project in voters_info['voters_foreign_keys'][voter_id]['votes']:
+            pref_info_objs.append(PreferenceInfo(voter_id=voters_objs[index].id,
+                                                 project=projects_obj[project],
+                                                 preference_strength=
+                                                 voters_info['voters_foreign_keys'][voter_id]['votes'][
+                                                     project]))
     if verbosity > 1: print("~50 %  ", end="\r")
     PreferenceInfo.objects.bulk_create(pref_info_objs)
         
@@ -408,7 +412,7 @@ class Command(BaseCommand):
         parser.add_argument('-d', nargs='*', type=str, help='specify the directory to take .pb files from')
         parser.add_argument('-f', nargs='*', type=str, help='specify a single .pb file')
         parser.add_argument('-o', '--overwrite', nargs='?', type=bool, const=True, default=False, help='overwrite existing elections')
-        # parser.add_argument('--all', action='store_true')
+        parser.add_argument('--rm', action='store_true', help='deletes the files after adding the election')
 
     def handle(self, *args, **options):
         if not options['d'] and not options['f']:
@@ -478,6 +482,8 @@ class Command(BaseCommand):
                     try:
                         # Actually adding the dataset
                         add_dataset(file_path, options['overwrite'], options['verbosity'])
+                        if options['rm']:
+                            os.remove(file_path)
                         log.append(" ... done.</li>\n")
                     except Exception as e:
                         # If something happened, we log it and move on

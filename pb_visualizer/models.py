@@ -92,15 +92,15 @@ class Election(models.Model):
     description = models.TextField(blank=True)
     country = models.CharField(max_length=50,
                                blank=True)
-    unit = models.CharField(max_length=50,
+    unit = models.CharField(max_length=150,
                             verbose_name="unit",
                             help_text="name of the municipality, region, organization, etc.",
                             blank=True)
-    subunit = models.CharField(max_length=50,
+    subunit = models.CharField(max_length=150,
                                verbose_name="subunit",
                                help_text="name of the sub-jurisdiction",
                                blank=True)
-    instance = models.SlugField(max_length=50,
+    instance = models.SlugField(max_length=150,
                                 verbose_name="instance",
                                 help_text="identifier from the organizers",
                                 blank=True)
@@ -129,8 +129,7 @@ class Election(models.Model):
                                 blank=True)
     edition = models.CharField(max_length=50,
                                blank=True)
-    district = models.CharField(max_length=50,
-                                blank=True)
+    district = models.TextField(blank=True)
     comment = models.TextField(blank=True)
 
     # Additional (possibly redundant) data
