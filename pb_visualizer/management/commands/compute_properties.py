@@ -69,9 +69,9 @@ def rule_mapping(budget):
                 {"sat_class": Cost_Sat},
             ]
         }},
-        'mes_greedy_app': {'func': rules.completion_by_rule_combination, 'params': {
+        'mes_greedy_cost': {'func': rules.completion_by_rule_combination, 'params': {
             'rule_sequence': [rules.method_of_equal_shares, rules.greedy_utilitarian_welfare],
-            'rule_params': [{'sat_class': Cost_Sat}, {'sat_class': Cardinality_Sat}]
+            'rule_params': [{'sat_class': Cost_Sat}, {'sat_class': Cost_Sat}]
         }},
         'seq_phragmen': {'func': rules.sequential_phragmen, 'params': {}}
     }
