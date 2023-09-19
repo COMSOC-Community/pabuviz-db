@@ -174,6 +174,7 @@ class Election(models.Model):
         'num_projects',
         'num_votes',
         'ballot_type',
+        'rule'
         'date_begin',
         'date_end',
         'has_categories',

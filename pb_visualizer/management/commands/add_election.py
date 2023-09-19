@@ -35,7 +35,7 @@ ballot_type_objs = {
 
 rule_abbreviation_mapping = {
     'greedy_cost': ['greedy_cost', 'greedy'],
-    'mes': ['mes'],
+    'mes': ['mes', 'equalshares/add1'],
 }
 
 rule_objs = {
@@ -107,7 +107,10 @@ def collect_election_info (instance_pabutools: Instance,
                     election_defaults[key] = rule_objs[rule]
                     break
             else:
-                raise Exception("Unknown rule. Rules currently supported by the database are: " + str([rule + ": " + str(rule_abbreviation_mapping[rule]) for rule in rule_abbreviation_mapping]))
+                raise Exception(
+                    "Unknown rule {}. Rules currently supported by the database are: ".format(election_defaults[key])
+                        + str([rule + ": " + str(rule_abbreviation_mapping[rule]) for rule in rule_abbreviation_mapping])
+                    )
 
         elif key in ['date_begin', 'date_end']:
             election_defaults[key] = datetime.datetime.strptime(election_info[key], "%d.%m.%Y").date()

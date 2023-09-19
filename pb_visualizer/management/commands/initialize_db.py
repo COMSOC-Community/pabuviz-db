@@ -480,10 +480,10 @@ def initialize_rules(ballot_type_objs):
     
     order_priority += 1
     rule_obj, _ = Rule.objects.update_or_create(
-        abbreviation = "mes_greedy_app",
+        abbreviation = "mes_greedy_cost",
         defaults={
             "name": "Equal shares (greedy)",
-            "description": "The method of equal shares with greedy approval completion",
+            "description": "The method of equal shares with greedy (cost) completion",
             "order_priority": order_priority,
             "rule_family": mes_obj
         }
