@@ -129,8 +129,7 @@ class Election(models.Model):
                                 blank=True)
     edition = models.CharField(max_length=50,
                                blank=True)
-    district = models.CharField(max_length=50,
-                                blank=True)
+    district = models.TextField(blank=True)
     comment = models.TextField(blank=True)
 
     # Additional (possibly redundant) data
