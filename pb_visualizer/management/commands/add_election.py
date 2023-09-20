@@ -1,23 +1,18 @@
-from email.policy import default
-from time import sleep
-from django.core.management.base import BaseCommand
-from django.contrib.staticfiles import finders
+import datetime
+import os
+import shutil
+import traceback
+
 from django.core import management
+from django.contrib.staticfiles import finders
+from django.core.management.base import BaseCommand
 from django.db.models import Max
-from numpy import delete
+from django.utils import timezone
+from pabutools.election import Instance, Profile
+from pabutools.election.pabulib import parse_pabulib
 
 import pb_visualizer
-
 from pb_visualizer.models import *
-
-import traceback
-import csv
-import os
-import datetime
-
-import pprint
-from pabutools.election.pabulib import parse_pabulib
-from pabutools.election import Instance, Profile
 
 # here we can add multiple aliases for each of the vote types, rules and genders
 
@@ -82,6 +77,8 @@ def collect_election_info(
     has_targets: bool,
     has_voting_methods: bool,
     has_neighborhoods: bool,
+    file_name: str,
+    file_size: int,
     verbosity: int = 1,
 ):
     election_defaults = {}
@@ -186,6 +183,8 @@ def collect_election_info(
     election_defaults["has_targets"] = has_targets
     election_defaults["has_voting_methods"] = has_voting_methods
     election_defaults["has_neighborhoods"] = has_neighborhoods
+    election_defaults["file_name"] = file_name
+    election_defaults["file_size"] = file_size
 
     election_defaults["is_trivial"] = instance_pabutools.is_trivial()
 
@@ -195,7 +194,7 @@ def collect_election_info(
             election_defaults.get("subunit"),
             election_defaults.get("district"),
             election_defaults.get("date_begin"),
-        )  # TODO: come up with better automated naming, do we even need it?
+        )  # TODO: come up with better automated naming
 
     # we check that all obligatory fields are present
     for field in Election._meta.get_fields():
@@ -364,7 +363,7 @@ def collect_voters_info(
     }
 
 
-def add_dataset(file_path: str, overwrite: bool, verbosity: int = 1):
+def add_election(file_path: str, override: bool, verbosity: int = 1):
     # We read and parse the file
     # election_info, projects_info, voters_info = parse_pb_file(file_path)
     if verbosity > 1:
@@ -388,6 +387,8 @@ def add_dataset(file_path: str, overwrite: bool, verbosity: int = 1):
         len(projects_info["targets_set"]) > 0,
         len(voters_info["voting_methods_set"]) > 0,
         len(voters_info["neighborhoods_set"]) > 0,
+        os.path.basename(file_path),
+        os.path.getsize(file_path),
         verbosity,
     )
 
@@ -397,7 +398,7 @@ def add_dataset(file_path: str, overwrite: bool, verbosity: int = 1):
     # create election object
     election_query = Election.objects.filter(name=election_info["defaults"]["name"])
     if election_query.exists():
-        if overwrite:
+        if override:
             if verbosity > 1:
                 print("removing existing election...")
             election_query.delete()
@@ -529,7 +530,12 @@ def add_dataset(file_path: str, overwrite: bool, verbosity: int = 1):
         print("~50 %  ", end="\r")
     PreferenceInfo.objects.bulk_create(pref_info_objs)
 
-    return
+    # Finally, move the file to the static folder
+    data_dir_path = os.path.join(
+        os.path.dirname(pb_visualizer.__file__), "static", "data"
+    )
+    os.makedirs(data_dir_path, exist_ok=True)
+    shutil.copyfile(file_path, os.path.join(data_dir_path, os.path.basename(file_path)))
 
 
 class Command(BaseCommand):
@@ -545,12 +551,12 @@ class Command(BaseCommand):
         parser.add_argument("-f", nargs="*", type=str, help="specify a single .pb file")
         parser.add_argument(
             "-o",
-            "--overwrite",
+            "--override",
             nargs="?",
             type=bool,
             const=True,
             default=False,
-            help="overwrite existing elections",
+            help="override existing elections",
         )
         parser.add_argument(
             "--rm",
@@ -646,9 +652,9 @@ class Command(BaseCommand):
                         )
                     log.append("\n\t<li>Dataset " + str(file_name) + "... ")
                     try:
-                        # Actually adding the dataset
-                        add_dataset(
-                            file_path, options["overwrite"], options["verbosity"]
+                        # Actually adding the election
+                        add_election(
+                            file_path, options["override"], options["verbosity"]
                         )
                         if options["rm"]:
                             os.remove(file_path)
@@ -669,6 +675,10 @@ class Command(BaseCommand):
             log.append("</ul>\n<p>The datasets have been successfully added in ")
             log.append(str((timezone.now() - start_time).total_seconds() / 60))
             log.append(" minutes.</p>")
+
+            # Collecting the statics once everything has been done
+            print("Finished, collecting statics")
+            management.call_command("collectstatic", no_input=False)
         except Exception as e:
             # If anything happened during the execution, we log it and move on
             log.append(

@@ -2,7 +2,7 @@ from curses import meta
 from importlib import metadata
 import time
 from django.test import TestCase
-from pb_visualizer.management.commands.add_election import add_dataset
+from pb_visualizer.management.commands.add_election import add_election
 from pb_visualizer.management.commands.initialize_db import initialize_db
 from pb_visualizer.models import *
 from pb_visualizer.api import *

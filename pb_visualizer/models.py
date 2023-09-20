@@ -1,8 +1,5 @@
 from django.contrib.auth.models import User
-from django.utils import timezone
 from django.db import models
-
-from pydoc import locate
 
 from .choices import *
 
@@ -83,7 +80,7 @@ class Rule(models.Model):
 
 class Election(models.Model):
     # Election data
-    name = models.TextField()
+    name = models.TextField(unique=True)
     description = models.TextField(blank=True)
     country = models.CharField(max_length=50, blank=True)
     unit = models.CharField(
@@ -164,7 +161,7 @@ class Election(models.Model):
     # meta data
     modification_date = models.DateField(auto_now=True)
 
-    file_path = models.CharField(max_length=50, blank=True, null=True, unique=True)
+    file_name = models.CharField(max_length=50, blank=True, null=True, unique=True)
     file_size = models.FloatField(default=0)
 
     public_fields = [

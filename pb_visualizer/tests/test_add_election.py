@@ -1,5 +1,5 @@
 from django.test import TestCase
-from pb_visualizer.management.commands.add_election import add_dataset
+from pb_visualizer.management.commands.add_election import add_election
 from pb_visualizer.management.commands.initialize_db import initialize_db
 from pb_visualizer.models import *
 import os
@@ -12,7 +12,7 @@ class AddElectionTestCase(TestCase):
 
     def test_integrity(self):
         """test integrity of election even if pb file has integrity errors"""
-        add_dataset(
+        add_election(
             "pb_visualizer/tests/test_files/test_file_non_integral_data.pb",
             None,
             verbosity=0,
@@ -31,7 +31,7 @@ class AddElectionTestCase(TestCase):
         """election without budget is rejected"""
         self.assertRaises(
             Exception,
-            lambda: add_dataset(
+            lambda: add_election(
                 "pb_visualizer/tests/test_files/test_file_missing_budget.pb",
                 None,
                 verbosity=0,
@@ -40,7 +40,7 @@ class AddElectionTestCase(TestCase):
 
     def test_ordinal_example(self):
         """test if importing ordinal preferences works"""
-        add_dataset(
+        add_election(
             "pb_visualizer/tests/test_files/test_file_ordinal.pb", None, verbosity=0
         )
         election = Election.objects.get(name="election4")
@@ -53,7 +53,7 @@ class AddElectionTestCase(TestCase):
 
     def test_cumulative_example(self):
         """test if importing ordinal preferences works"""
-        add_dataset(
+        add_election(
             "pb_visualizer/tests/test_files/test_file_cumulative.pb", None, verbosity=0
         )
         election = Election.objects.get(name="election5")

@@ -14,20 +14,22 @@ from pabutools.election.satisfaction import Cost_Sat
 
 from pb_visualizer.management.commands.utils import (
     LazyElectionParser,
-    instance_property_mapping,
     exists_in_database,
+    print_if_verbose,
+)
+from pb_visualizer.models import *
+from pb_visualizer.pabutools import (
+    project_object_to_pabutools,
+    instance_property_mapping,
     profile_property_mapping,
     rule_mapping,
-    print_if_verbose,
     satisfaction_property_mapping,
     gini_property_mapping,
 )
-from pb_visualizer.models import *
-from pb_visualizer.pabutools import project_object_to_pabutools
 
 
 def compute_election_properties(
-    election_parser: LazyElectionParser, overwrite: bool = False, verbosity: int = 1
+    election_parser: LazyElectionParser, override: bool = False, verbosity: int = 1
 ) -> None:
     election_obj = election_parser.get_election_obj()
 
@@ -36,7 +38,7 @@ def compute_election_properties(
         metadata_obj = ElectionMetadata.objects.get(short_name=instance_property)
         if metadata_obj.applies_to_election(election_obj):
             unique_filters = {"election": election_obj, "metadata": metadata_obj}
-            if overwrite or not exists_in_database(
+            if override or not exists_in_database(
                 ElectionDataProperty, **unique_filters
             ):
                 instance, profile = election_parser.get_parsed_election()
@@ -52,7 +54,7 @@ def compute_election_properties(
         metadata_obj = ElectionMetadata.objects.get(short_name=profile_property)
         if metadata_obj.applies_to_election(election_obj):
             unique_filters = {"election": election_obj, "metadata": metadata_obj}
-            if overwrite or not exists_in_database(
+            if override or not exists_in_database(
                 ElectionDataProperty, **unique_filters
             ):
                 instance, profile = election_parser.get_parsed_election()
@@ -69,7 +71,7 @@ def compute_election_properties(
 def compute_election_results(
     election_parser: LazyElectionParser,
     rule_list: Iterable[str] | None,
-    overwrite: bool = False,
+    override: bool = False,
     verbosity: int = 1,
 ) -> None:
     election_obj = election_parser.get_election_obj()
@@ -80,7 +82,7 @@ def compute_election_results(
             rule_obj = Rule.objects.get(abbreviation=rule)
             if rule_obj.applies_to_election(election_obj):
                 unique_filters = {"election": election_obj, "rule": rule_obj}
-                if overwrite or not exists_in_database(RuleResult, **unique_filters):
+                if override or not exists_in_database(RuleResult, **unique_filters):
                     print_if_verbose("Computing {}.".format(rule), 2, verbosity)
                     rule_result_obj, _ = RuleResult.objects.update_or_create(
                         **unique_filters
@@ -102,7 +104,7 @@ def compute_election_results(
 def compute_rule_result_properties(
     election_parser: LazyElectionParser,
     rule_property_list: Iterable[str] | None,
-    overwrite: bool = False,
+    override: bool = False,
     verbosity: int = 1,
 ) -> None:
     election_obj = election_parser.get_election_obj()
@@ -128,7 +130,7 @@ def compute_rule_result_properties(
                         "rule_result": rule_result_object,
                         "metadata": metadata_obj,
                     }
-                    if overwrite or not exists_in_database(
+                    if override or not exists_in_database(
                         RuleResultDataProperty, **unique_filters
                     ):
                         print_if_verbose("Computing {}.".format(property), 3, verbosity)
@@ -161,7 +163,7 @@ def compute_rule_result_properties(
                         "rule_result": rule_result_object,
                         "metadata": metadata_obj,
                     }
-                    if overwrite or not exists_in_database(
+                    if override or not exists_in_database(
                         RuleResultDataProperty, **unique_filters
                     ):
                         print_if_verbose("Computing {}.".format(property), 3, verbosity)
@@ -188,7 +190,7 @@ def compute_rule_result_properties(
                     "rule_result": rule_result_object,
                     "metadata": metadata_obj,
                 }
-                if overwrite or not exists_in_database(
+                if override or not exists_in_database(
                     RuleResultDataProperty, **unique_filters
                 ):
                     print_if_verbose("Computing {}.".format(property), 3, verbosity)
@@ -209,7 +211,7 @@ def compute_rule_result_properties(
                         "rule_result": rule_result_object,
                         "metadata": metadata_obj,
                     }
-                    if overwrite or not exists_in_database(
+                    if override or not exists_in_database(
                         RuleResultDataProperty, **unique_filters
                     ):
                         print_if_verbose("Computing {}.".format(property), 3, verbosity)
@@ -228,7 +230,7 @@ def compute_rule_result_properties(
                     "rule_result": rule_result_object,
                     "metadata": metadata_obj,
                 }
-                if overwrite or not exists_in_database(
+                if override or not exists_in_database(
                     RuleResultDataProperty, **unique_filters
                 ):
                     print_if_verbose("Computing {}.".format(property), 3, verbosity)
@@ -253,7 +255,7 @@ def compute_properties(
     rules=None,
     rule_properties=False,
     exact=False,
-    overwrite: bool = False,
+    override: bool = False,
     verbosity=1,
 ):
     election_query = Election.objects.all()
@@ -275,13 +277,13 @@ def compute_properties(
 
         print_if_verbose("basic election properties...", 1, verbosity)
         compute_election_properties(
-            election_parser, overwrite=overwrite, verbosity=verbosity
+            election_parser, override=override, verbosity=verbosity
         )
 
         if rules == None or len(rules) > 0:
             print_if_verbose("rule results...", 1, verbosity)
             compute_election_results(
-                election_parser, rules, overwrite=overwrite, verbosity=verbosity
+                election_parser, rules, override=override, verbosity=verbosity
             )
 
         if rule_properties == None or len(rule_properties) > 0:
@@ -289,7 +291,7 @@ def compute_properties(
             compute_rule_result_properties(
                 election_parser,
                 rule_properties,
-                overwrite=overwrite,
+                override=override,
                 verbosity=verbosity,
             )
 
@@ -332,12 +334,12 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "-o",
-            "--overwrite",
+            "--override",
             nargs="?",
             type=bool,
             const=True,
             default=False,
-            help="Overwrite properties that were already computed.",
+            help="Override properties that were already computed.",
         )
 
     def handle(self, *args, **options):
@@ -346,6 +348,6 @@ class Command(BaseCommand):
             rules=options["rules"],
             rule_properties=options["rule_properties"],
             exact=options["exact"],
-            overwrite=options["overwrite"],
+            override=options["override"],
             verbosity=options["verbosity"],
         )
