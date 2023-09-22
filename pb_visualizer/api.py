@@ -63,14 +63,14 @@ def _get_type_from_model_field(field):
     elif field_type == models.DateField:
         return "date"
     elif field_type == models.BooleanField:
-        return 'bool'
+        return "bool"
     elif (
         field_type == models.CharField
         or field_type == models.TextField
     ):
-        return 'str'
+        return "str"
     elif field_type == models.ForeignKey:
-        return 'reference'
+        return "reference"
     else:
         return "not supported"
 
@@ -178,13 +178,13 @@ def get_filterable_election_property_list(
         property_field = Election._meta.get_field(field_name)
         
         property_dict = {
-            'name': property_field.verbose_name,
-            'short_name': field_name,
-            'description': property_field.help_text,
-            'inner_type': _get_type_from_model_field(property_field)
+            "name": property_field.verbose_name,
+            "short_name": field_name,
+            "description": property_field.help_text,
+            "inner_type": _get_type_from_model_field(property_field)
         }
 
-        if property_dict['inner_type'] == 'reference':
+        if property_dict["inner_type"] == "reference":
             related_model_query_set = property_field.related_model.objects.all()
             related_model_query_set = related_model_query_set.annotate(
                 num_elections=Count(property_field.remote_field.related_name)
@@ -192,10 +192,10 @@ def get_filterable_election_property_list(
             referencable_objects = {}
             for obj in related_model_query_set:
                 referencable_objects[obj.pk] = {
-                    'name': obj.name,
-                    'description': obj.description
+                    "name": obj.name,
+                    "description": obj.description
                 }
-            property_dict['referencable_objects'] = referencable_objects
+            property_dict["referencable_objects"] = referencable_objects
         
         return property_dict
     
@@ -215,7 +215,7 @@ def get_filterable_election_property_list(
     for metadata_obj in property_query:
             properties.append(ElectionMetadataSerializer(metadata_obj).data)
     
-    return {'data': properties, 'metadata': {'referencable_objects': referencable_objects}}
+    return {"data": properties, "metadata": {"referencable_objects": referencable_objects}}
 
 
 def get_rule_result_average_data_properties(
@@ -302,7 +302,7 @@ def get_election_property_histogram(
 ) -> tuple[list, list]:
     
     ballot_type_names = [
-        prop_tuple[0] for prop_tuple in BallotType.objects.all().values_list('name')
+        prop_tuple[0] for prop_tuple in BallotType.objects.all().values_list("name")
     ]
 
     election_query_set = filter_elections(**election_filters)
@@ -624,7 +624,7 @@ def _filter_elections_by_model_field(
             election_query_set = election_query_set.filter(
                 **{election_property: election_property_filter["equals"]}
             )
-    elif type == 'reference':
+    elif type == "reference":
         if isinstance(election_property_filter, str):
             election_query_set = election_query_set.filter(
                 **{election_property: election_property_filter}

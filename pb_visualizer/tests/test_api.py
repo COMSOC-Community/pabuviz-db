@@ -351,7 +351,7 @@ class TestApi(TestCase):
             name="e0",
             budget=10,
             num_votes=10,
-            ballot_type_id='approval',
+            ballot_type_id="approval",
             has_categories=True
         )
         category_objs = []
