@@ -54,13 +54,10 @@ class RuleFamilyFullSerializer(serializers.ModelSerializer):
         )
 
 
-class ElectionSerializerFull(serializers.ModelSerializer):
-    budget = serializers.DecimalField(max_digits=50,
-                                      decimal_places=2,
-                                      coerce_to_string=False)
+class BallotTypeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Election 
-        fields = '__all__'
+        model = BallotType 
+        fields = ['name', 'description']
 
 
 class ElectionSerializer(serializers.ModelSerializer):
@@ -69,13 +66,7 @@ class ElectionSerializer(serializers.ModelSerializer):
                                       coerce_to_string=False)
     class Meta:
         model = Election 
-        fields = Election.public_fields
-        
-
-class BallotTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BallotType 
-        fields = ['name', 'description']
+        fields = Election.public_fields        
 
 
 class ElectionMetadataSerializer(serializers.ModelSerializer):

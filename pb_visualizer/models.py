@@ -109,13 +109,16 @@ class Election(models.Model):
                                  verbose_name="budget",
                                  help_text="maximum budget to spend")
     ballot_type = models.ForeignKey(BallotType,
-                                  on_delete=models.CASCADE,
-                                  related_name="elections")
+                                    on_delete=models.CASCADE,
+                                    related_name="elections",
+                                    verbose_name="ballot type")
     rule = models.ForeignKey(Rule,
                              on_delete=models.CASCADE,
                              blank=True,
                              null=True,
-                             related_name="elections")
+                             related_name="elections",
+                             verbose_name="rule used",
+                             help_text="the rule that was applied in the actual election")
     
     date_begin = models.DateField(blank=True,
                                   null=True,
@@ -164,7 +167,6 @@ class Election(models.Model):
 
 
     public_fields = [
-        'id',
         'name',
         'description',
         'country',
@@ -174,7 +176,7 @@ class Election(models.Model):
         'num_projects',
         'num_votes',
         'ballot_type',
-        'rule'
+        'rule',
         'date_begin',
         'date_end',
         'has_categories',

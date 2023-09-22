@@ -21,9 +21,6 @@ from pb_visualizer import views
 
 
 urlpatterns = [
-    # path('api/elections/<int:election_id>/', views.election_metadata),
-    # path('api/elections/<int:election_id>/<str:rule_abbreviation>/', views.rule_result),
-    # path('api/elections/<int:election_id>/<str:rule_abbreviation>/metadata', views.rule_result_metadata),
     path('admin/', admin.site.urls),
     path('api/ballot_types/', views.ballot_type_list),
     path('api/elections/', views.election_list),
