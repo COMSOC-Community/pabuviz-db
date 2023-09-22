@@ -547,7 +547,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
         name="average cardinality satisfaction",
         defaults={
-            "description": "average number of approved projects selected by the rule over all voters",
+            "description": "average over all voters of the number of approved projects selected by the rule",
             "short_name": "avg_card_sat",
             "inner_type": "float",
             "range": "0-",
@@ -566,8 +566,8 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
         name="average cardinality satisfaction (normalized)",
         defaults={
-            "description": "average number of approved projects selected by the rule over all voters,"
-            "normalized by the maximum number of projects that could be chosen w.r.t. the budget limit",
+            "description": "average over all voters of the number of approved projects selected by the rule"
+            "normalized by the highest number of projects that can be selected in a feasible budget allocation",
             "short_name": "avg_nrmcard_sat",
             "inner_type": "float",
             "range": "01",
@@ -586,7 +586,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
         name="average relative cardinality satisfaction",
         defaults={
-            "description": "average number of approved project selected by the rule, relative to the number over all voters.",
+            "description": "average over all voters of the ratio of the number of approved project selected by the rule divided by the maximum size of a feasible subset of the ballot",
             "short_name": "avg_relcard_sat",
             "inner_type": "float",
             "range": "01",
@@ -603,9 +603,9 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Average cost satisfaction",
+        name="average cost satisfaction",
         defaults={
-            "description": "The average cost satisfaction of the voters",
+            "description": "average over all voters of the total cost the approved projects that have been selected",
             "short_name": "avg_cost_sat",
             "inner_type": "float",
             "range": "0-",
@@ -622,10 +622,10 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Average cost satisfaction (normalized)",
+        name="average cost satisfaction (normalized)",
         defaults={
-            "description": "The average cost satisfaction of the voters,"
-            "normalized by the maximum possible budget allocation cost (w.r.t. the budget limit)",
+            "description": "average over all voters of the total cost the approved projects that have been selected,"
+            "normalized by the highest cost of a feasible budget allocation",
             "short_name": "avg_nrmcost_sat",
             "inner_type": "float",
             "range": "01",
@@ -642,9 +642,9 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Average relative cost satisfaction",
+        name="average relative cost satisfaction",
         defaults={
-            "description": "The average relative cost satisfaction of the voters",
+            "description": "average over all voters of the ratio of the total cost of the approved project that have been selected divided by the maximum total cost of a feasible subset of the ballot",
             "short_name": "avg_relcost_sat",
             "inner_type": "float",
             "range": "01",
@@ -661,9 +661,9 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Category proportionality",
+        name="category proportionality",
         defaults={
-            "description": "",
+            "description": "average over all categories of the distance between the budget allocated to the category by the voter and the cost allocated to the category in the budget allocation",
             "short_name": "category_prop",
             "inner_type": "float",
             "range": "01",
@@ -680,9 +680,9 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Equality (inverted cost gini)",
+        name="equality (inverted cost Gini)",
         defaults={
-            "description": "",
+            "description": "inverted Gini coefficient of the cost satisfaction of the voters: the total cost of the approved projects that have been selected",
             "short_name": "equality",
             "inner_type": "float",
             "range": "01",
@@ -711,9 +711,9 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Happiness (%non-empty-handed)",
+        name="potion of non-empty-handed",
         defaults={
-            "description": "",
+            "description": "percentage of voters for whom no project appearing in the ballot has been selected",
             "short_name": "happiness",
             "inner_type": "float",
             "range": "01",
@@ -730,9 +730,9 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Median selected cost",
+        name="median selected cost",
         defaults={
-            "description": "",
+            "description": "median of the cost of the selected projects",
             "short_name": "med_select_cost",
             "inner_type": "float",
             "range": "0-",
@@ -750,9 +750,9 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Aggregated normalized cost satisfaction distribution",
+        name="aggregated normalized cost satisfaction distribution",
         defaults={
-            "description": "The relative number of voters being x %% satisfied for x being 0, 0-5, 5-10, ..., 95-100.",
+            "description": "the relative number of voters being x %% satisfied for x being 0, 0-5, 5-10, ..., 95-100.",
             "short_name": "agg_nrmcost_sat",
             "inner_type": "list[float]",
             "range": "01",
