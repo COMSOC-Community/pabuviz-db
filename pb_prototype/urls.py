@@ -19,18 +19,17 @@ from django.urls import path, re_path
 from pb_visualizer import views
 
 
-
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/ballot_types/', views.ballot_type_list),
-    path('api/elections/', views.election_list),
-    path('api/election_details/', views.election_details),
-    path('api/election_properties/', views.filterable_election_property_list),
-    path('api/projects/', views.project_list),
-    path('api/rules/', views.rule_family_list),
-    path('api/rule_properties/', views.rule_result_property_list),
-    path('api/avg_rule_property/', views.rule_result_data_property),
-    path('api/rule_voter_satisfaction_histogram/', views.voter_satisfaction_histogram),
-    path('api/election_property_histogram/', views.election_property_histogram),
-    path('api/category_proportions/', views.rule_category_proportions),
+    path("admin/", admin.site.urls),
+    path("api/ballot_types/", views.ballot_type_list),
+    path("api/elections/", views.election_list),
+    path("api/election_details/", views.election_details),
+    path("api/election_properties/", views.filterable_election_property_list),
+    path("api/projects/", views.project_list),
+    path("api/rules/", views.rule_family_list),
+    path("api/rule_properties/", views.rule_result_property_list),
+    path("api/avg_rule_property/", views.rule_result_data_property),
+    path("api/rule_voter_satisfaction_histogram/", views.voter_satisfaction_histogram),
+    path("api/election_property_histogram/", views.election_property_histogram),
+    path("api/category_proportions/", views.rule_category_proportions),
 ]

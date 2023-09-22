@@ -1,0 +1,6 @@
+numpy
+django
+djangorestframework
+django-cors-headers
+pabutools
+black
