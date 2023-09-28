@@ -16,6 +16,9 @@ class TestApi(TestCase):
         initialize_db()
 
     def test_election_filter(self):
+        greedy_obj = Rule.objects.get(abbreviation="greedy_cost")
+        mes_obj = Rule.objects.get(abbreviation="mes")
+
         for i in range(3):
             election_obj = Election.objects.create(
                 id=i,
@@ -24,12 +27,10 @@ class TestApi(TestCase):
                 ballot_type_id="approval",
                 num_votes=20 * i,
                 num_projects=5 * i,
+                rule=greedy_obj if i == 0 else (mes_obj if i == 1 else None)
             )
             # project_obj1 = Project.objects.create(name="p1.1", cost=1, project_id="1", election_id=1)
             # project_obj2 = Project.objects.create(name="p1.2", cost=1, project_id="2", election_id=1)
-
-            greedy_obj = Rule.objects.get(abbreviation="greedy_cost")
-            mes_obj = Rule.objects.get(abbreviation="mes")
 
             # if i == 1:
             greedy_result_obj = RuleResult.objects.create(
@@ -101,8 +102,14 @@ class TestApi(TestCase):
         election_query_set = filter_elections(budget={"max": 200})
         assert len(election_query_set) == 3
 
-        election_query_set = filter_elections(ballot_types=["ordinal", "approval"])
+        election_query_set = filter_elections(ballot_type=["ordinal", "approval"])
         assert len(election_query_set) == 3
+
+        election_query_set = filter_elections(ballot_type="approval")
+        assert len(election_query_set) == 3
+
+        election_query_set = filter_elections(ballot_type="ordinal")
+        assert len(election_query_set) == 0
 
         prop_list = ["avg_card_sat", "avg_cost_sat"]
         rule_list = ["mes", "greedy_cost"]
@@ -125,6 +132,13 @@ class TestApi(TestCase):
         election_query_set = filter_elections(name={"equals": "e1"})
         assert len(election_query_set) == 1
         assert election_query_set.first().name == "e1"
+
+        election_query_set = filter_elections(rule="greedy_cost")
+        assert(len(election_query_set) == 1)
+        assert(election_query_set.first().name == "e0")
+
+        election_query_set = filter_elections(rule=["greedy_cost", "mes"])
+        assert(len(election_query_set) == 2)
 
         election_query_set = Election.objects.all()
         election_query_set = filter_elections_by_rule_properties(
@@ -260,6 +274,7 @@ class TestApi(TestCase):
         for i in range(4):
             election_obj = Election.objects.create(
                 id=i,
+                name="e"+str(i),
                 budget=10**i,
                 num_votes=i,
                 ballot_type_id=("approval" if i < 2 else "ordinal"),
@@ -333,10 +348,11 @@ class TestApi(TestCase):
     def test_proportionality(self):
         election_obj = Election.objects.create(
             id=0,
+            name="e0",
             budget=10,
             num_votes=10,
             ballot_type_id="approval",
-            has_categories=True,
+            has_categories=True
         )
         category_objs = []
         # target_objs = []
@@ -381,8 +397,9 @@ class TestApi(TestCase):
         rule3_result_obj.selected_projects.set([])
 
         proportionality_data = category_proportions(
-            election_id=0, rule_abbreviation_list=["rule1", "rule2", "rule3"]
-        )
+            election_name="e0",
+            rule_abbreviation_list=["rule1", "rule2", "rule3"]
+        )        
 
         assert proportionality_data["category_names"] == ["0", "1"]
         assert proportionality_data["vote_cost_shares"] == [7.0 / 13.0, 6.0 / 13.0]
@@ -394,9 +411,9 @@ class TestApi(TestCase):
         assert proportionality_data["result_cost_shares"]["rule3"] == [0, 0]
 
         self.assertRaises(
-            ValueError,
+            ApiExcepetion,
             lambda: category_proportions(
-                election_id=8, rule_abbreviation_list=["rule1", "rule2", "rule3"]
+                election_name="e8", rule_abbreviation_list=["rule1", "rule2", "rule3"]
             ),
         )
 
@@ -405,18 +422,18 @@ class TestApi(TestCase):
         )
 
         self.assertRaises(
-            ValueError,
+            ApiExcepetion,
             lambda: category_proportions(
-                election_id=1, rule_abbreviation_list=["rule1", "rule2", "rule3"]
+                election_name="e1", rule_abbreviation_list=["rule1", "rule2", "rule3"]
             ),
         )
 
         election_obj = Election.objects.create(
-            id=2, budget=10, ballot_type_id="approval", has_categories=False
+            id=2, name="e2", budget=10, ballot_type_id="approval", has_categories=False
         )
 
         proportionality_data = category_proportions(
-            election_id=2, rule_abbreviation_list=["rule1", "rule2", "rule3"]
+            election_name="e2", rule_abbreviation_list=["rule1", "rule2", "rule3"]
         )
         assert proportionality_data["category_names"] == []
         assert proportionality_data["vote_cost_shares"] == []

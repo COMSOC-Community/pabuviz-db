@@ -8,21 +8,21 @@ def initialize_ballot_types():
 
     ballot_type_objs["approval"], _ = BallotType.objects.update_or_create(
         name="approval",
-        defaults={"description": "approval ballots", "order_priority": 1},
+        defaults={"description": "voters simply select a set of projects (the ones they approve), potentially with additional constraints", "order_priority": 1},
     )
 
     ballot_type_objs["ordinal"], _ = BallotType.objects.update_or_create(
-        name="ordinal", defaults={"description": "ordinal ballots", "order_priority": 2}
+        name="ordinal", defaults={"description": "voters rank in order of preferences some or all of the projects", "order_priority": 2}
     )
 
     ballot_type_objs["cumulative"], _ = BallotType.objects.update_or_create(
         name="cumulative",
-        defaults={"description": "cumulative ballots", "order_priority": 3},
+        defaults={"description": "voters distribute a given number of points between the projects", "order_priority": 3},
     )
 
     ballot_type_objs["cardinal"], _ = BallotType.objects.update_or_create(
         name="cardinal",
-        defaults={"description": "cardinal ballots", "order_priority": 4},
+        defaults={"description": "voters specify an un-restricted score for a project", "order_priority": 4},
     )
 
     return ballot_type_objs
@@ -35,7 +35,7 @@ def initialize_election_metadata(ballot_type_objs):
         short_name="max_length",
         defaults={
             "name": "maximum allowed ballot length",
-            "description": "maximum number of projects a voter can approve",
+            "description": "maximum number of projects allowed to appear in a ballot",
             "inner_type": "int",
             "order_priority": order_priority,
         },
@@ -54,7 +54,7 @@ def initialize_election_metadata(ballot_type_objs):
         short_name="min_length",
         defaults={
             "name": "minimum allowed ballot length",
-            "description": "minimum number of projects a voter can approve",
+            "description": "minimum number of projects that has to appear in a ballot",
             "inner_type": "int",
             "order_priority": order_priority,
         },
@@ -74,7 +74,7 @@ def initialize_election_metadata(ballot_type_objs):
         short_name="max_sum_cost",
         defaults={
             "name": "maximum allowed ballot cost",
-            "description": "maximum cost restriction on the ballots",
+            "description": "maximum total cost allowed for the projects appearing in a ballot",
             "inner_type": "float",
             "order_priority": order_priority,
         },
@@ -86,7 +86,7 @@ def initialize_election_metadata(ballot_type_objs):
         short_name="min_sum_cost",
         defaults={
             "name": "minimum allowed ballot cost",
-            "description": "minimum cost restriction on the ballots",
+            "description": "minimum total cost that the projects appearing in a ballot has to reach",
             "inner_type": "float",
             "order_priority": order_priority,
         },
@@ -99,7 +99,7 @@ def initialize_election_metadata(ballot_type_objs):
         short_name="max_sum_points",
         defaults={
             "name": "maximum allowed total points",
-            "description": "upper restriction on the total points each voter can give",
+            "description": "total number of points distributed by a voter",
             "inner_type": "float",
             "order_priority": order_priority,
         },
@@ -111,7 +111,7 @@ def initialize_election_metadata(ballot_type_objs):
         short_name="min_sum_points",
         defaults={
             "name": "minimum allowed total points",
-            "description": "lower restriction on the total points each voter can give",
+            "description": "total number of points that has to be distributed by a voter",
             "inner_type": "float",
             "order_priority": order_priority,
         },
@@ -124,7 +124,7 @@ def initialize_election_metadata(ballot_type_objs):
         short_name="max_points",
         defaults={
             "name": "maximum allowed points",
-            "description": "upper restriction on the number of points a voter can give to a single project",
+            "description": "maximum number of points that can be assigned to a single project",
             "inner_type": "float",
             "order_priority": order_priority,
         },
@@ -138,7 +138,7 @@ def initialize_election_metadata(ballot_type_objs):
         short_name="min_points",
         defaults={
             "name": "minimum allowed points",
-            "description": "lower restriction on the number of points a voter can give to a single project",
+            "description": "minimum number of points that has to be assigned to a single project",
             "inner_type": "float",
             "order_priority": order_priority,
         },
@@ -152,7 +152,7 @@ def initialize_election_metadata(ballot_type_objs):
         short_name="default_score",
         defaults={
             "name": "default score",
-            "description": "default score of a project in a ballot",
+            "description": "default score of a project not appearing in a ballot",
             "inner_type": "float",
             "order_priority": order_priority,
         },
@@ -165,7 +165,7 @@ def initialize_election_metadata(ballot_type_objs):
         short_name="sum_proj_cost",
         defaults={
             "name": "total cost of all projects",
-            "description": "total sum of the costs of all projects",
+            "description": "total cost of all the projects of the election",
             "inner_type": "float",
             "order_priority": order_priority,
         },
@@ -184,7 +184,7 @@ def initialize_election_metadata(ballot_type_objs):
         short_name="fund_scarc",
         defaults={
             "name": "funding scarcity",
-            "description": "funding scarcity is given as the ratio of the total project cost to the budget limit",
+            "description": "ratio between the total cost of the projects and the budget limit",
             "inner_type": "float",
             "order_priority": order_priority,
         },
@@ -203,7 +203,7 @@ def initialize_election_metadata(ballot_type_objs):
         short_name="avg_proj_cost",
         defaults={
             "name": "average project cost",
-            "description": "average cost of all the projects",
+            "description": "average cost of the projects of the election",
             "inner_type": "float",
             "order_priority": order_priority,
         },
@@ -222,7 +222,7 @@ def initialize_election_metadata(ballot_type_objs):
         short_name="med_proj_cost",
         defaults={
             "name": "median project cost",
-            "description": "median cost of all the projects",
+            "description": "median cost of the projects of the election",
             "inner_type": "float",
             "order_priority": order_priority,
         },
@@ -376,8 +376,8 @@ def initialize_rules(ballot_type_objs):
     greedy_obj, _ = RuleFamily.objects.update_or_create(
         abbreviation="greedy",
         defaults={
-            "name": "Greedy",
-            "description": "Greedy rules",
+            "name": "greedy satisfaction maximiser",
+            "description": "greedy approximation of the satisfaction maximiser",
             "order_priority": order_priority,
         },
     )
@@ -386,8 +386,8 @@ def initialize_rules(ballot_type_objs):
     max_sat_obj, _ = RuleFamily.objects.update_or_create(
         abbreviation="max_sat",
         defaults={
-            "name": "Satisfaction maximizer",
-            "description": "Rules maximizing some satisfaction function",
+            "name": "satisfaction maximiser",
+            "description": "exact satisfaction maximisers",
             "order_priority": order_priority,
         },
     )
@@ -396,8 +396,8 @@ def initialize_rules(ballot_type_objs):
     mes_obj, _ = RuleFamily.objects.update_or_create(
         abbreviation="mes",
         defaults={
-            "name": "Method of equal shares",
-            "description": "Method of equal shares and variations",
+            "name": "method of equal shares",
+            "description": "method of equal shares",
             "order_priority": order_priority,
         },
     )
@@ -406,8 +406,8 @@ def initialize_rules(ballot_type_objs):
     other_obj, _ = RuleFamily.objects.update_or_create(
         abbreviation="other",
         defaults={
-            "name": "Other",
-            "description": "Other rules",
+            "name": "additional procedures",
+            "description": "additional procedures",
             "order_priority": order_priority,
         },
     )
@@ -417,8 +417,8 @@ def initialize_rules(ballot_type_objs):
     rule_obj, _ = Rule.objects.update_or_create(
         abbreviation="greedy_card",
         defaults={
-            "name": "Greedy (card)",
-            "description": "Greedily choose the project with the best cost to approval ratio",
+            "name": "greedy (card)",
+            "description": "greedily selects projects based on the approval score to cost ratio",
             "order_priority": order_priority,
             "rule_family": greedy_obj,
         },
@@ -429,8 +429,8 @@ def initialize_rules(ballot_type_objs):
     rule_obj, _ = Rule.objects.update_or_create(
         abbreviation="greedy_cost",
         defaults={
-            "name": "Greedy (cost)",
-            "description": "Greedily choose the most approved projects",
+            "name": "greedy (cost)",
+            "description": "greedily selects projects based on the cost to cost ratio, i.e., the approval score",
             "order_priority": order_priority,
             "rule_family": greedy_obj,
         },
@@ -441,8 +441,8 @@ def initialize_rules(ballot_type_objs):
     rule_obj, _ = Rule.objects.update_or_create(
         abbreviation="greedy_cc",
         defaults={
-            "name": "Greedy (Chamberlin-Courant)",
-            "description": "Greedily choose the project supported by the highest number of completely unsatisfied voters",
+            "name": "greedy (Chamberlin-Courant)",
+            "description": "greedily selects projects based on the covering to cost ratio",
             "order_priority": order_priority,
             "rule_family": greedy_obj,
         },
@@ -453,8 +453,8 @@ def initialize_rules(ballot_type_objs):
     rule_obj, _ = Rule.objects.update_or_create(
         abbreviation="max_card",
         defaults={
-            "name": "Maximum cardinality satisfaction",
-            "description": "Chooses the allocation yielding the maximum total cardinality satisfaction",
+            "name": "cardinality satisfaction maximiser",
+            "description": "selects a feasible set of projects with the maximum total cardinality satisfaction (number of approved and selected projects)",
             "order_priority": order_priority,
             "rule_family": max_sat_obj,
         },
@@ -469,8 +469,8 @@ def initialize_rules(ballot_type_objs):
     rule_obj, _ = Rule.objects.update_or_create(
         abbreviation="max_cost",
         defaults={
-            "name": "Maximum cost satisfaction",
-            "description": "Chooses the allocation yielding the maximum total cost satisfaction",
+            "name": "cost satisfaction maximiser",
+            "description": "selects a feasible set of projects with the maximum total cost satisfaction (total cost of the approved and selected projects)",
             "order_priority": order_priority,
             "rule_family": max_sat_obj,
         },
@@ -485,8 +485,8 @@ def initialize_rules(ballot_type_objs):
     rule_obj, _ = Rule.objects.update_or_create(
         abbreviation="mes",
         defaults={
-            "name": "Equal shares",
-            "description": "The method of equal shares with budget increase and greedy (cost) completion",
+            "name": "equal shares",
+            "description": "method of equal shares with iterative budget increase and greedy (cost) completion",
             "order_priority": order_priority,
             "rule_family": mes_obj,
         },
@@ -501,8 +501,8 @@ def initialize_rules(ballot_type_objs):
     rule_obj, _ = Rule.objects.update_or_create(
         abbreviation="mes_uncompleted",
         defaults={
-            "name": "Equal shares (no completion)",
-            "description": "The method of equal shares without budget increase or completion",
+            "name": "equal shares (no completion)",
+            "description": "method of equal shares without iterative budget increase or completion",
             "order_priority": order_priority,
             "rule_family": mes_obj,
         },
@@ -517,8 +517,8 @@ def initialize_rules(ballot_type_objs):
     rule_obj, _ = Rule.objects.update_or_create(
         abbreviation="mes_greedy_cost",
         defaults={
-            "name": "Equal shares (greedy)",
-            "description": "The method of equal shares with greedy (cost) completion",
+            "name": "equal shares (greedy)",
+            "description": "method of equal shares with greedy (cost) completion",
             "order_priority": order_priority,
             "rule_family": mes_obj,
         },
@@ -533,8 +533,8 @@ def initialize_rules(ballot_type_objs):
     rule_obj, _ = Rule.objects.update_or_create(
         abbreviation="seq_phragmen",
         defaults={
-            "name": "Sequential Phragmen",
-            "description": "Sequential Phragmen rule",
+            "name": "sequential Phragmen",
+            "description": "sequential Phragmen rule",
             "order_priority": order_priority,
             "rule_family": other_obj,
         },
@@ -545,9 +545,9 @@ def initialize_rules(ballot_type_objs):
 def initialize_rule_result_metadata(ballot_type_objs):
     order_priority = 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Average cardinality satisfaction",
+        name="average cardinality satisfaction",
         defaults={
-            "description": "The average number of approved projects chosen by the rule over all voters.",
+            "description": "average over all voters of the number of approved projects selected by the rule",
             "short_name": "avg_card_sat",
             "inner_type": "float",
             "range": "0-",
@@ -564,10 +564,10 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Average cardinality satisfaction (normalized)",
+        name="average cardinality satisfaction (normalized)",
         defaults={
-            "description": "The average number of approved projects chosen by the rule over all voters,"
-            "normalized by the maximum number of projects that could be chosen w.r.t. the budget limit.",
+            "description": "average over all voters of the number of approved projects selected by the rule"
+            "normalized by the highest number of projects that can be selected in a feasible budget allocation",
             "short_name": "avg_nrmcard_sat",
             "inner_type": "float",
             "range": "01",
@@ -584,9 +584,9 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Average relative cardinality satisfaction",
+        name="average relative cardinality satisfaction",
         defaults={
-            "description": "The average relative number of approved project chosen by the rule over all voters.",
+            "description": "average over all voters of the ratio of the number of approved project selected by the rule divided by the maximum size of a feasible subset of the ballot",
             "short_name": "avg_relcard_sat",
             "inner_type": "float",
             "range": "01",
@@ -603,9 +603,9 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Average cost satisfaction",
+        name="average cost satisfaction",
         defaults={
-            "description": "The average cost satisfaction of the voters",
+            "description": "average over all voters of the total cost the approved projects that have been selected",
             "short_name": "avg_cost_sat",
             "inner_type": "float",
             "range": "0-",
@@ -622,10 +622,10 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Average cost satisfaction (normalized)",
+        name="average cost satisfaction (normalized)",
         defaults={
-            "description": "The average cost satisfaction of the voters,"
-            "normalized by the maximum possible budget allocation cost (w.r.t. the budget limit)",
+            "description": "average over all voters of the total cost the approved projects that have been selected,"
+            "normalized by the highest cost of a feasible budget allocation",
             "short_name": "avg_nrmcost_sat",
             "inner_type": "float",
             "range": "01",
@@ -642,9 +642,9 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Average relative cost satisfaction",
+        name="average relative cost satisfaction",
         defaults={
-            "description": "The average relative cost satisfaction of the voters",
+            "description": "average over all voters of the ratio of the total cost of the approved project that have been selected divided by the maximum total cost of a feasible subset of the ballot",
             "short_name": "avg_relcost_sat",
             "inner_type": "float",
             "range": "01",
@@ -661,9 +661,9 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Category proportionality",
+        name="category proportionality",
         defaults={
-            "description": "",
+            "description": "average over all categories of the distance between the budget allocated to the category by the voter and the cost allocated to the category in the budget allocation",
             "short_name": "category_prop",
             "inner_type": "float",
             "range": "01",
@@ -680,9 +680,9 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Equality (inverted cost gini)",
+        name="equality (inverted cost Gini)",
         defaults={
-            "description": "",
+            "description": "inverted Gini coefficient of the cost satisfaction of the voters: the total cost of the approved projects that have been selected",
             "short_name": "equality",
             "inner_type": "float",
             "range": "01",
@@ -711,9 +711,9 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Happiness (%non-empty-handed)",
+        name="potion of non-empty-handed",
         defaults={
-            "description": "",
+            "description": "percentage of voters for whom no project appearing in the ballot has been selected",
             "short_name": "happiness",
             "inner_type": "float",
             "range": "01",
@@ -730,9 +730,9 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Median selected cost",
+        name="median selected cost",
         defaults={
-            "description": "",
+            "description": "median of the cost of the selected projects",
             "short_name": "med_select_cost",
             "inner_type": "float",
             "range": "0-",
@@ -750,9 +750,9 @@ def initialize_rule_result_metadata(ballot_type_objs):
 
     order_priority += 1
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
-        name="Aggregated normalized cost satisfaction distribution",
+        name="aggregated normalized cost satisfaction distribution",
         defaults={
-            "description": "The relative number of voters being x %% satisfied for x being 0, 0-5, 5-10, ..., 95-100.",
+            "description": "the relative number of voters being x %% satisfied for x being 0, 0-5, 5-10, ..., 95-100.",
             "short_name": "agg_nrmcost_sat",
             "inner_type": "list[float]",
             "range": "01",

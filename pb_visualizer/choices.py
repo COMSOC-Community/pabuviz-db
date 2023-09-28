@@ -21,16 +21,3 @@ GENDER = ((GENDER_MALE, "male"), (GENDER_FEMALE, "female"), (GENDER_OTHER, "othe
 
 
 INNER_TYPE = [("int", "integer"), ("float", "float"), ("list[float]", "list of floats")]
-
-
-# METADATACATEGORIES = [
-#     ('general', 'general properties'),
-#     ('preference', 'preference structure'),
-#     ('ballot', 'ballot structure'),
-#     ('aggregation', 'aggregtated structure')
-# ]
-
-# SEARCHWIDGETS = [
-#     ('ternary', 'ternary choices'),
-#     ('range', 'range')
-# ]

@@ -7,20 +7,20 @@ from .models import *
 #     def __init__(self, *args, **kwargs):
 #         super(ModelSerializerVerboseNames, self).__init__(*args, **kwargs)
 
-#         if 'labels' in self.fields:
+#         if "labels" in self.fields:
 #             raise RuntimeError(
-#                 'You cant have labels field defined '
-#                 'while using ModelSerializerVerboseNames'
+#                 "You cant have labels field defined "
+#                 "while using ModelSerializerVerboseNames"
 #             )
 
-#         self.fields['labels'] = SerializerMethodField()
+#         self.fields["labels"] = SerializerMethodField()
 
 #     def get_labels(self, *args):
 #         labels = {}
 
 #         for field in self.Meta.model._meta.get_fields():
 #             if field.name in self.fields:
-#                 labels[field.name] = {'label': field.verbose_name, 'help_text': field.help_text}
+#                 labels[field.name] = {"label": field.verbose_name, "help_text": field.help_text}
 
 #         return labels
 
@@ -45,14 +45,10 @@ class RuleFamilyFullSerializer(serializers.ModelSerializer):
         fields = ("name", "abbreviation", "description", "elements")
 
 
-class ElectionSerializerFull(serializers.ModelSerializer):
-    budget = serializers.DecimalField(
-        max_digits=50, decimal_places=2, coerce_to_string=False
-    )
-
+class BallotTypeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Election
-        fields = "__all__"
+        model = BallotType 
+        fields = ["name", "description"]
 
 
 class ElectionSerializer(serializers.ModelSerializer):
@@ -61,14 +57,8 @@ class ElectionSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Election
-        fields = Election.public_fields
-
-
-class BallotTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BallotType
-        fields = ["name", "description"]
+        model = Election 
+        fields = Election.public_fields        
 
 
 class ElectionMetadataSerializer(serializers.ModelSerializer):

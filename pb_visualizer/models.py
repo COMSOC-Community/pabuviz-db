@@ -108,10 +108,18 @@ class Election(models.Model):
         help_text="maximum budget to spend",
     )
     ballot_type = models.ForeignKey(
-        BallotType, on_delete=models.CASCADE, related_name="elections"
+        BallotType,
+        on_delete=models.CASCADE,
+        related_name="elections",
+        verbose_name="ballot type"
     )
     rule = models.ForeignKey(
-        Rule, on_delete=models.CASCADE, blank=True, null=True, related_name="elections"
+        Rule,
+        on_delete=models.CASCADE,
+        blank=True, null=True,
+        related_name="elections",
+        verbose_name="rule applied",
+        help_text="the rule that was applied in the actual election"
     )
 
     date_begin = models.DateField(
@@ -165,7 +173,6 @@ class Election(models.Model):
     file_size = models.FloatField(default=0)
 
     public_fields = [
-        "id",
         "name",
         "description",
         "country",
@@ -175,12 +182,13 @@ class Election(models.Model):
         "num_projects",
         "num_votes",
         "ballot_type",
-        "rule" "date_begin",
+        "rule",
+        "date_begin",
         "date_end",
         "has_categories",
         "has_targets",
         "has_neighborhoods",
-        "has_voting_methods",
+        "has_voting_methods"
     ]
 
     def get_meta_property(self, short_name):
