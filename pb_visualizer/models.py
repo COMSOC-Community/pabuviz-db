@@ -80,7 +80,7 @@ class Rule(models.Model):
 
 class Election(models.Model):
     # Election data
-    name = models.TextField(unique=True)
+    name = models.TextField() # This should be unique but MySQL does not allow it.
     description = models.TextField(blank=True)
     country = models.CharField(max_length=50, blank=True)
     unit = models.CharField(
