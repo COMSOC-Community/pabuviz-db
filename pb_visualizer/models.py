@@ -196,7 +196,7 @@ class Election(models.Model):
         return self.name
 
     class Meta:
-        ordering = ["-date_begin", "country", "name"]
+        ordering = ["-date_begin", "country", "unit"]
 
 
 class Category(models.Model):
@@ -260,7 +260,7 @@ class Project(models.Model):
     targets = models.ManyToManyField(Target, blank=True, related_name="projects")
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["project_id"]
         unique_together = [["project_id", "election"]]
 
 

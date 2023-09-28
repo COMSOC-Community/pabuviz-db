@@ -101,7 +101,7 @@ def export_rule_results(
                         )
                         with open(export_file, "a") as f:
                             f.write(
-                                f'"{election_obj.name}";{rule};{"#%#%#".join(p.name for p in pabutools_result)}\n'
+                                f'"{election_obj.name}";{rule};"{"#%#%#".join(p.name for p in pabutools_result)}"\n'
                             )
 
 
