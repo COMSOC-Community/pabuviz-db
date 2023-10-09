@@ -7,6 +7,8 @@ from pabutools.election import (
     Relative_Cardinality_Sat,
     Relative_Cost_Approx_Normaliser_Sat,
     CC_Sat,
+    Additive_Cardinal_Sat,
+    Additive_Borda_Sat,
     max_budget_allocation_cardinality,
     max_budget_allocation_cost,
 )
@@ -59,6 +61,7 @@ gini_property_mapping = {
 
 def rule_mapping(budget):
     return {
+        # approval
         "greedy_card": {
             "func": rules.greedy_utilitarian_welfare,
             "params": {"sat_class": Cardinality_Sat},
@@ -107,10 +110,103 @@ def rule_mapping(budget):
                     rules.method_of_equal_shares,
                     rules.greedy_utilitarian_welfare,
                 ],
-                "rule_params": [{"sat_class": Cost_Sat}, {"sat_class": Cost_Sat}],
+                "rule_params": [
+                    {"sat_class": Cost_Sat},
+                    {"sat_class": Cost_Sat}
+                ],
             },
         },
         "seq_phragmen": {"func": rules.sequential_phragmen, "params": {}},
+        #cardinal
+        "greedy_cardbal": {
+            "func": rules.greedy_utilitarian_welfare,
+            "params": {"sat_class": Additive_Cardinal_Sat},
+        },
+        "greedy_cardbal_cc": {
+            "func": rules.greedy_utilitarian_welfare,
+            "params": {"sat_class": CC_Sat},
+        },
+        "max_add_card": {
+            "func": rules.max_additive_utilitarian_welfare,
+            "params": {"sat_class": Additive_Cardinal_Sat},
+        },
+        "mes_cardbal_uncompleted": {
+            "func": rules.method_of_equal_shares,
+            "params": {"sat_class": Additive_Cardinal_Sat},
+        },
+        "mes_cardbal": {
+            "func": rules.completion_by_rule_combination,
+            "params": {
+                "rule_sequence": [
+                    rules.exhaustion_by_budget_increase,
+                    rules.greedy_utilitarian_welfare,
+                ],
+                "rule_params": [
+                    {
+                        "rule": rules.method_of_equal_shares,
+                        "rule_params": {"sat_class": Additive_Cardinal_Sat},
+                        "budget_step": float(budget) / 100,
+                    },
+                    {"sat_class": Additive_Cardinal_Sat},
+                ],
+            },
+        },
+        "mes_cardbal_greedy": {
+            "func": rules.completion_by_rule_combination,
+            "params": {
+                "rule_sequence": [
+                    rules.method_of_equal_shares,
+                    rules.greedy_utilitarian_welfare,
+                ],
+                "rule_params": [
+                    {"sat_class": Additive_Cardinal_Sat},
+                    {"sat_class": Additive_Cardinal_Sat}
+                ],
+            },
+        },
+        #ordinal
+        "greedy_borda": {
+            "func": rules.greedy_utilitarian_welfare,
+            "params": {"sat_class": Additive_Borda_Sat},
+        },
+        "max_borda": {
+            "func": rules.max_additive_utilitarian_welfare,
+            "params": {"sat_class": Additive_Borda_Sat},
+        },
+        "mes_borda_uncompleted": {
+            "func": rules.method_of_equal_shares,
+            "params": {"sat_class": Additive_Borda_Sat},
+        },
+        "mes_borda": {
+            "func": rules.completion_by_rule_combination,
+            "params": {
+                "rule_sequence": [
+                    rules.exhaustion_by_budget_increase,
+                    rules.greedy_utilitarian_welfare,
+                ],
+                "rule_params": [
+                    {
+                        "rule": rules.method_of_equal_shares,
+                        "rule_params": {"sat_class": Additive_Borda_Sat},
+                        "budget_step": float(budget) / 100,
+                    },
+                    {"sat_class": Additive_Borda_Sat},
+                ],
+            },
+        },
+        "mes_borda_greedy": {
+            "func": rules.completion_by_rule_combination,
+            "params": {
+                "rule_sequence": [
+                    rules.method_of_equal_shares,
+                    rules.greedy_utilitarian_welfare,
+                ],
+                "rule_params": [
+                    {"sat_class": Additive_Borda_Sat},
+                    {"sat_class": Additive_Borda_Sat}
+                ],
+            },
+        },
     }
 
 
