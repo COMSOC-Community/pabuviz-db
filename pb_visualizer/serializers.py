@@ -47,7 +47,7 @@ class RuleFamilyFullSerializer(serializers.ModelSerializer):
 
 class BallotTypeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = BallotType 
+        model = BallotType
         fields = ["name", "description"]
 
 
@@ -57,8 +57,8 @@ class ElectionSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Election 
-        fields = Election.public_fields        
+        model = Election
+        fields = Election.public_fields
 
 
 class ElectionMetadataSerializer(serializers.ModelSerializer):

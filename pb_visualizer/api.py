@@ -29,7 +29,7 @@ from django.db.models import (
     Value,
 )
 from django.db.models.functions import Cast, Floor, Ln
-from django.core.exceptions import FieldDoesNotExist 
+from django.core.exceptions import FieldDoesNotExist
 
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import status
@@ -42,6 +42,7 @@ from pabutools.election.satisfaction import (
     SatisfactionProfile,
     Relative_Cost_Approx_Normaliser_Sat,
 )
+
 
 class ApiExcepetion(PermissionDenied):
     status_code = status.HTTP_400_BAD_REQUEST
@@ -64,10 +65,7 @@ def _get_type_from_model_field(field):
         return "date"
     elif field_type == models.BooleanField:
         return "bool"
-    elif (
-        field_type == models.CharField
-        or field_type == models.TextField
-    ):
+    elif field_type == models.CharField or field_type == models.TextField:
         return "str"
     elif field_type == models.ForeignKey:
         return "reference"
@@ -131,19 +129,23 @@ def get_election_details(
         for data_prop_obj in data_props_query:
             election_details[data_prop_obj.metadata.short_name] = data_prop_obj.value
 
-        
         election_details_collection[election_obj.name] = election_details
 
     return {"data": election_details_collection, "metadata": properties}
 
 
 def get_project_list(election_name: int) -> list[dict]:
-    if (election_name == None):
-        raise ApiExcepetion("Please provide an election name with your request.", status_code=status.HTTP_400_BAD_REQUEST)
+    if election_name == None:
+        raise ApiExcepetion(
+            "Please provide an election name with your request.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
     project_query_set = Project.objects.all().filter(election__name=election_name)
     project_serializer = ProjectSerializer(project_query_set, many=True)
 
-    rule_query_set = Rule.objects.all().filter(rule_results__election__name=election_name)
+    rule_query_set = Rule.objects.all().filter(
+        rule_results__election__name=election_name
+    )
     rule_serializer = RuleSerializer(rule_query_set, many=True)
 
     return {
@@ -160,12 +162,12 @@ def get_rule_family_list() -> list[dict]:
 
 
 def get_rule_result_property_list(
-    property_short_names: Iterable[str] = None
+    property_short_names: Iterable[str] = None,
 ) -> list[dict]:
     query = RuleResultMetadata.objects.all()
     if property_short_names:
         query = query.filter(short_name__in=property_short_names)
-       
+
     serializer = RuleResultMetadataSerializer(query, many=True)
     return {"data": serializer.data}
 
@@ -173,15 +175,14 @@ def get_rule_result_property_list(
 def get_filterable_election_property_list(
     property_short_names: Iterable[str], ballot_type: str = None
 ) -> list[dict]:
-    
     def field_to_property_dict(field_name):
         property_field = Election._meta.get_field(field_name)
-        
+
         property_dict = {
             "name": property_field.verbose_name,
             "short_name": field_name,
             "description": property_field.help_text,
-            "inner_type": _get_type_from_model_field(property_field)
+            "inner_type": _get_type_from_model_field(property_field),
         }
 
         if property_dict["inner_type"] == "reference":
@@ -193,13 +194,12 @@ def get_filterable_election_property_list(
             for obj in related_model_query_set:
                 referencable_objects[obj.pk] = {
                     "name": obj.name,
-                    "description": obj.description
+                    "description": obj.description,
                 }
             property_dict["referencable_objects"] = referencable_objects
-        
+
         return property_dict
-    
-    
+
     properties = []
     referencable_objects = {}
 
@@ -211,11 +211,14 @@ def get_filterable_election_property_list(
     if property_short_names != None:
         property_query = property_query.filter(short_name__in=property_short_names)
     if ballot_type != None:
-            property_query = property_query.filter(applies_to=ballot_type)
+        property_query = property_query.filter(applies_to=ballot_type)
     for metadata_obj in property_query:
-            properties.append(ElectionMetadataSerializer(metadata_obj).data)
-    
-    return {"data": properties, "metadata": {"referencable_objects": referencable_objects}}
+        properties.append(ElectionMetadataSerializer(metadata_obj).data)
+
+    return {
+        "data": properties,
+        "metadata": {"referencable_objects": referencable_objects},
+    }
 
 
 def get_rule_result_average_data_properties(
@@ -298,9 +301,8 @@ def get_election_property_histogram(
     election_filters: dict = {},
     num_bins: int = 20,
     by_ballot_type: bool = False,
-    log_scale: bool = False
+    log_scale: bool = False,
 ) -> tuple[list, list]:
-    
     ballot_type_names = [
         prop_tuple[0] for prop_tuple in BallotType.objects.all().values_list("name")
     ]
@@ -451,10 +453,9 @@ def category_proportions(election_name: int, rule_abbreviation_list: str):
         election_obj = Election.objects.all().get(name=election_name)
     except:
         raise ApiExcepetion(
-             "Invalid election name.",
-             status_code=status.HTTP_400_BAD_REQUEST
+            "Invalid election name.", status_code=status.HTTP_400_BAD_REQUEST
         )
-    
+
     if election_obj.has_categories:
         categories_query = Category.objects.all().filter(election=election_obj)
         votes = PreferenceInfo.objects.all().filter(voter__election=election_obj)
@@ -503,7 +504,7 @@ def category_proportions(election_name: int, rule_abbreviation_list: str):
         if vote_cost_share_sum == 0:
             raise ApiExcepetion(
                 "Election does not have votes for projects with positive cost and categories.",
-                status_code=status.HTTP_400_BAD_REQUEST
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
 
         # if a rule does not select any projects with positive cost and categories:
@@ -554,8 +555,10 @@ def filter_elections(
         else:
             # property does not exist or is not allowed to be filtered through the api
             raise ApiExcepetion(
-                "Property {} does not exist or is not supported for filtering.".format(election_property),
-                status_code=status.HTTP_400_BAD_REQUEST
+                "Property {} does not exist or is not supported for filtering.".format(
+                    election_property
+                ),
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
 
     return election_query_set
@@ -629,20 +632,25 @@ def _filter_elections_by_model_field(
             election_query_set = election_query_set.filter(
                 **{election_property: election_property_filter}
             )
-        elif isinstance(election_property_filter, list) and  all(isinstance(item, str) for item in election_property_filter):
+        elif isinstance(election_property_filter, list) and all(
+            isinstance(item, str) for item in election_property_filter
+        ):
             election_query_set = election_query_set.filter(
                 **{election_property + "__in": election_property_filter}
             )
         else:
-            raise ApiExcepetion("Wrong type of filter {}. Should be either a string or a list of strings.".format(type))
+            raise ApiExcepetion(
+                "Wrong type of filter {}. Should be either a string or a list of strings.".format(
+                    type
+                )
+            )
 
-                
     else:
         # other types (e.g. foreign keys) not yet supported, if you add a field of a different type, write a filter here
         raise NotImplementedError(
             "Property type {} is not supported for filtering.".format(type)
         )
-    
+
     return election_query_set
 
 

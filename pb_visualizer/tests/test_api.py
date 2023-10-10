@@ -27,7 +27,7 @@ class TestApi(TestCase):
                 ballot_type_id="approval",
                 num_votes=20 * i,
                 num_projects=5 * i,
-                rule=greedy_obj if i == 0 else (mes_obj if i == 1 else None)
+                rule=greedy_obj if i == 0 else (mes_obj if i == 1 else None),
             )
             # project_obj1 = Project.objects.create(name="p1.1", cost=1, project_id="1", election_id=1)
             # project_obj2 = Project.objects.create(name="p1.2", cost=1, project_id="2", election_id=1)
@@ -134,11 +134,11 @@ class TestApi(TestCase):
         assert election_query_set.first().name == "e1"
 
         election_query_set = filter_elections(rule="greedy_cost")
-        assert(len(election_query_set) == 1)
-        assert(election_query_set.first().name == "e0")
+        assert len(election_query_set) == 1
+        assert election_query_set.first().name == "e0"
 
         election_query_set = filter_elections(rule=["greedy_cost", "mes"])
-        assert(len(election_query_set) == 2)
+        assert len(election_query_set) == 2
 
         election_query_set = Election.objects.all()
         election_query_set = filter_elections_by_rule_properties(
@@ -274,7 +274,7 @@ class TestApi(TestCase):
         for i in range(4):
             election_obj = Election.objects.create(
                 id=i,
-                name="e"+str(i),
+                name="e" + str(i),
                 budget=10**i,
                 num_votes=i,
                 ballot_type_id=("approval" if i < 2 else "ordinal"),
@@ -352,7 +352,7 @@ class TestApi(TestCase):
             budget=10,
             num_votes=10,
             ballot_type_id="approval",
-            has_categories=True
+            has_categories=True,
         )
         category_objs = []
         # target_objs = []
@@ -397,9 +397,8 @@ class TestApi(TestCase):
         rule3_result_obj.selected_projects.set([])
 
         proportionality_data = category_proportions(
-            election_name="e0",
-            rule_abbreviation_list=["rule1", "rule2", "rule3"]
-        )        
+            election_name="e0", rule_abbreviation_list=["rule1", "rule2", "rule3"]
+        )
 
         assert proportionality_data["category_names"] == ["0", "1"]
         assert proportionality_data["vote_cost_shares"] == [7.0 / 13.0, 6.0 / 13.0]

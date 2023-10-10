@@ -8,21 +8,34 @@ def initialize_ballot_types():
 
     ballot_type_objs["approval"], _ = BallotType.objects.update_or_create(
         name="approval",
-        defaults={"description": "voters simply select a set of projects (the ones they approve), potentially with additional constraints", "order_priority": 1},
+        defaults={
+            "description": "voters simply select a set of projects (the ones they approve), potentially with additional constraints",
+            "order_priority": 1,
+        },
     )
 
     ballot_type_objs["ordinal"], _ = BallotType.objects.update_or_create(
-        name="ordinal", defaults={"description": "voters rank in order of preferences some or all of the projects", "order_priority": 2}
+        name="ordinal",
+        defaults={
+            "description": "voters rank in order of preferences some or all of the projects",
+            "order_priority": 2,
+        },
     )
 
     ballot_type_objs["cumulative"], _ = BallotType.objects.update_or_create(
         name="cumulative",
-        defaults={"description": "voters distribute a given number of points between the projects", "order_priority": 3},
+        defaults={
+            "description": "voters distribute a given number of points between the projects",
+            "order_priority": 3,
+        },
     )
 
     ballot_type_objs["cardinal"], _ = BallotType.objects.update_or_create(
         name="cardinal",
-        defaults={"description": "voters specify an un-restricted score for a project", "order_priority": 4},
+        defaults={
+            "description": "voters specify an un-restricted score for a project",
+            "order_priority": 4,
+        },
     )
 
     return ballot_type_objs
@@ -157,11 +170,9 @@ def initialize_election_metadata(ballot_type_objs):
             "order_priority": order_priority,
         },
     )
-    election_metadata_obj.applies_to.set([
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"]
-    
-    ])
+    election_metadata_obj.applies_to.set(
+        [ballot_type_objs["cumulative"], ballot_type_objs["cardinal"]]
+    )
 
     # election analysis
     order_priority += 1
@@ -537,10 +548,9 @@ def initialize_rules(ballot_type_objs):
             "rule_family": greedy_obj,
         },
     )
-    rule_obj.applies_to.set([
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"]
-    ])
+    rule_obj.applies_to.set(
+        [ballot_type_objs["cumulative"], ballot_type_objs["cardinal"]]
+    )
 
     order_priority += 1
     rule_obj, _ = Rule.objects.update_or_create(
@@ -552,10 +562,9 @@ def initialize_rules(ballot_type_objs):
             "rule_family": greedy_obj,
         },
     )
-    rule_obj.applies_to.set([
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"]
-    ])
+    rule_obj.applies_to.set(
+        [ballot_type_objs["cumulative"], ballot_type_objs["cardinal"]]
+    )
 
     order_priority += 1
     rule_obj, _ = Rule.objects.update_or_create(
@@ -567,10 +576,12 @@ def initialize_rules(ballot_type_objs):
             "rule_family": max_sat_obj,
         },
     )
-    rule_obj.applies_to.set([
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"],
-    ])
+    rule_obj.applies_to.set(
+        [
+            ballot_type_objs["cumulative"],
+            ballot_type_objs["cardinal"],
+        ]
+    )
 
     order_priority += 1
     rule_obj, _ = Rule.objects.update_or_create(
@@ -582,10 +593,12 @@ def initialize_rules(ballot_type_objs):
             "rule_family": mes_obj,
         },
     )
-    rule_obj.applies_to.set([
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"],
-    ])
+    rule_obj.applies_to.set(
+        [
+            ballot_type_objs["cumulative"],
+            ballot_type_objs["cardinal"],
+        ]
+    )
 
     order_priority += 1
     rule_obj, _ = Rule.objects.update_or_create(
@@ -597,10 +610,12 @@ def initialize_rules(ballot_type_objs):
             "rule_family": mes_obj,
         },
     )
-    rule_obj.applies_to.set([
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"],
-    ])
+    rule_obj.applies_to.set(
+        [
+            ballot_type_objs["cumulative"],
+            ballot_type_objs["cardinal"],
+        ]
+    )
 
     order_priority += 1
     rule_obj, _ = Rule.objects.update_or_create(
@@ -612,10 +627,12 @@ def initialize_rules(ballot_type_objs):
             "rule_family": mes_obj,
         },
     )
-    rule_obj.applies_to.set([
-        ballot_type_objs["cumulative"],
-        ballot_type_objs["cardinal"],
-    ])
+    rule_obj.applies_to.set(
+        [
+            ballot_type_objs["cumulative"],
+            ballot_type_objs["cardinal"],
+        ]
+    )
 
     # ordinal
     order_priority += 1
@@ -630,7 +647,6 @@ def initialize_rules(ballot_type_objs):
     )
     rule_obj.applies_to.set([ballot_type_objs["ordinal"]])
 
-
     order_priority += 1
     rule_obj, _ = Rule.objects.update_or_create(
         abbreviation="max_borda",
@@ -642,7 +658,6 @@ def initialize_rules(ballot_type_objs):
         },
     )
     rule_obj.applies_to.set([ballot_type_objs["ordinal"]])
-
 
     order_priority += 1
     rule_obj, _ = Rule.objects.update_or_create(
@@ -679,7 +694,6 @@ def initialize_rules(ballot_type_objs):
         },
     )
     rule_obj.applies_to.set([ballot_type_objs["ordinal"]])
-
 
 
 def initialize_rule_result_metadata(ballot_type_objs):

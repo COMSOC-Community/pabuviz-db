@@ -80,7 +80,7 @@ class Rule(models.Model):
 
 class Election(models.Model):
     # Election data
-    name = models.TextField() # This should be unique but MySQL does not allow it.
+    name = models.TextField()  # This should be unique but MySQL does not allow it.
     description = models.TextField(blank=True)
     country = models.CharField(max_length=50, blank=True)
     unit = models.CharField(
@@ -111,15 +111,16 @@ class Election(models.Model):
         BallotType,
         on_delete=models.CASCADE,
         related_name="elections",
-        verbose_name="ballot type"
+        verbose_name="ballot type",
     )
     rule = models.ForeignKey(
         Rule,
         on_delete=models.CASCADE,
-        blank=True, null=True,
+        blank=True,
+        null=True,
         related_name="elections",
         verbose_name="rule applied",
-        help_text="the rule that was applied in the actual election"
+        help_text="the rule that was applied in the actual election",
     )
 
     date_begin = models.DateField(
@@ -188,7 +189,7 @@ class Election(models.Model):
         "has_categories",
         "has_targets",
         "has_neighborhoods",
-        "has_voting_methods"
+        "has_voting_methods",
     ]
 
     def get_meta_property(self, short_name):

@@ -106,7 +106,7 @@ def export_rule_results(
 
 
 class Command(BaseCommand):
-    help = "compute all properties, rules and rule result properties for the elections in the database"
+    help = "computes the results of the elections in the database"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -158,7 +158,7 @@ class Command(BaseCommand):
             const=True,
             default=False,
             help="Use the databse for recovering an election (if present), or the file stored in the static folder ("
-                 "default).",
+            "default).",
         )
 
     def handle(self, *args, **options):
@@ -168,7 +168,7 @@ class Command(BaseCommand):
                 election_names=options["election_names"],
                 rule_list=options["rules"],
                 exact=options["exact"],
-                use_db=options["usedb"]
+                use_db=options["usedb"],
             )
         else:
             compute_rule_results(
@@ -177,5 +177,5 @@ class Command(BaseCommand):
                 exact=options["exact"],
                 override=options["override"],
                 verbosity=options["verbosity"],
-                use_db=options["usedb"]
+                use_db=options["usedb"],
             )

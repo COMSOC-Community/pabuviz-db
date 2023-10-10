@@ -1,5 +1,5 @@
 import json
-from typing import Iterable
+from collections.abc import Iterable
 
 import pabutools.fractions as fractions
 from django.core.management.base import BaseCommand

@@ -41,6 +41,8 @@ class LazyElectionParser:
                     self.election_obj
                 )
             else:
-                file_path = finders.find(os.path.join("data", self.election_obj.file_name))
+                file_path = finders.find(
+                    os.path.join("data", self.election_obj.file_name)
+                )
                 self.instance, self.profile = parse_pabulib(file_path)
         return self.instance, self.profile

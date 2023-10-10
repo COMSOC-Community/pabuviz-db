@@ -110,14 +110,11 @@ def rule_mapping(budget):
                     rules.method_of_equal_shares,
                     rules.greedy_utilitarian_welfare,
                 ],
-                "rule_params": [
-                    {"sat_class": Cost_Sat},
-                    {"sat_class": Cost_Sat}
-                ],
+                "rule_params": [{"sat_class": Cost_Sat}, {"sat_class": Cost_Sat}],
             },
         },
         "seq_phragmen": {"func": rules.sequential_phragmen, "params": {}},
-        #cardinal
+        # cardinal
         "greedy_cardbal": {
             "func": rules.greedy_utilitarian_welfare,
             "params": {"sat_class": Additive_Cardinal_Sat},
@@ -160,11 +157,11 @@ def rule_mapping(budget):
                 ],
                 "rule_params": [
                     {"sat_class": Additive_Cardinal_Sat},
-                    {"sat_class": Additive_Cardinal_Sat}
+                    {"sat_class": Additive_Cardinal_Sat},
                 ],
             },
         },
-        #ordinal
+        # ordinal
         "greedy_borda": {
             "func": rules.greedy_utilitarian_welfare,
             "params": {"sat_class": Additive_Borda_Sat},
@@ -203,7 +200,7 @@ def rule_mapping(budget):
                 ],
                 "rule_params": [
                     {"sat_class": Additive_Borda_Sat},
-                    {"sat_class": Additive_Borda_Sat}
+                    {"sat_class": Additive_Borda_Sat},
                 ],
             },
         },
