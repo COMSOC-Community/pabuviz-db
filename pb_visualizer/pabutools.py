@@ -103,14 +103,14 @@ rule_result_property_mapping = {
         num_bins=21,
     ),
 }
-for abb, params in satisfaction_property_mapping:
+for abb, params in satisfaction_property_mapping.items():
     if "normalizer_func" in params:
-        rule_result_property_mapping[abb] = lambda inst, profile, alloc: float(
+        rule_result_property_mapping[abb] = lambda inst, profile, alloc: float(fractions.frac(
             votersatisfaction.avg_satisfaction(
                 inst, profile, alloc, params["sat_class"]
             ),
-            params["normalizer_func"](inst, inst.budget_limit),
-        )
+            params["normalizer_func"](inst, inst.budget_limit)
+        ))
     else:
         rule_result_property_mapping[
             abb

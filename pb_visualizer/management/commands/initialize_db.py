@@ -830,7 +830,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
         short_name="avg_relsat_cardbal",
         defaults={
-            "name": "average satisfaction",
+            "name": "average relative satisfaction",
             "description": "average over all voters of the ratio of the total score of the selected projects divided "
             "by the maximum total score achievable by a feasible budget allocation",
             "inner_type": "float",

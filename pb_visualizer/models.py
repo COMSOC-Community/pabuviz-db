@@ -387,7 +387,7 @@ class RuleResult(models.Model):
 
 
 class RuleResultMetadata(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
     short_name = models.CharField(max_length=25, unique=True, primary_key=True)
     description = models.TextField()
     inner_type = models.CharField(max_length=20, choices=INNER_TYPE)

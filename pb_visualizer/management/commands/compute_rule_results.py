@@ -1,10 +1,10 @@
 from django.core.management import BaseCommand
 from pabutools import fractions
 
-from pb_visualizer.management.commands.compute_properties import print_if_verbose
 from pb_visualizer.management.commands.utils import (
     LazyElectionParser,
     exists_in_database,
+    print_if_verbose
 )
 from pb_visualizer.models import Election, Rule, RuleResult, Project
 from pb_visualizer.pabutools import rule_mapping
