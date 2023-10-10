@@ -1,16 +1,7 @@
-import json
 from collections.abc import Iterable
 
 import pabutools.fractions as fractions
 from django.core.management.base import BaseCommand
-from pabutools.analysis import (
-    instanceproperties,
-    category,
-    votersatisfaction,
-    satisfaction_histogram,
-)
-from pabutools.election.instance import max_budget_allocation_cost
-from pabutools.election.satisfaction import Cost_Sat
 
 from pb_visualizer.management.commands.utils import (
     LazyElectionParser,
@@ -20,8 +11,7 @@ from pb_visualizer.management.commands.utils import (
 from pb_visualizer.models import *
 from pb_visualizer.pabutools import (
     project_object_to_pabutools,
-    satisfaction_property_mapping,
-    gini_property_mapping,
+    rule_result_property_mapping,
 )
 
 
@@ -62,7 +52,7 @@ def compute_rule_result_properties(
                 for project in rule_result_object.selected_projects.all()
             ]
 
-            for property in satisfaction_property_mapping:
+            for property in rule_result_property_mapping:
                 if rule_property_list == None or property in rule_property_list:
                     metadata_obj = RuleResultMetadata.objects.get(short_name=property)
                     if metadata_obj.applies_to_election(election_obj):
@@ -77,125 +67,13 @@ def compute_rule_result_properties(
                                 "Computing {}.".format(property), 3, verbosity
                             )
                             instance, profile = election_parser.get_parsed_election()
-                            value = votersatisfaction.avg_satisfaction(
-                                instance,
-                                profile,
-                                budget_allocation,
-                                satisfaction_property_mapping[property]["sat_class"],
+                            value = rule_result_property_mapping[property](
+                                instance, profile, budget_allocation
                             )
-                            normalizer = 1
-                            if (
-                                satisfaction_property_mapping[property][
-                                    "normalizer_func"
-                                ]
-                                != None
-                            ):
-                                normalizer = satisfaction_property_mapping[property][
-                                    "normalizer_func"
-                                ](instance, instance.budget_limit)
-
                             RuleResultDataProperty.objects.update_or_create(
                                 **unique_filters,
-                                defaults={"value": str(float(value / normalizer))},
+                                defaults={"value": str(value)},
                             )
-
-            for property in gini_property_mapping:
-                if rule_property_list == None or property in rule_property_list:
-                    metadata_obj = RuleResultMetadata.objects.get(short_name=property)
-                    if metadata_obj.applies_to_election(election_obj):
-                        unique_filters = {
-                            "rule_result": rule_result_object,
-                            "metadata": metadata_obj,
-                        }
-                        if override or not exists_in_database(
-                            RuleResultDataProperty, **unique_filters
-                        ):
-                            print_if_verbose(
-                                "Computing {}.".format(property), 3, verbosity
-                            )
-                            instance, profile = election_parser.get_parsed_election()
-                            value = votersatisfaction.gini_coefficient_of_satisfaction(
-                                instance,
-                                profile,
-                                budget_allocation,
-                                gini_property_mapping[property],
-                                invert=True,
-                            )
-                            RuleResultDataProperty.objects.update_or_create(
-                                **unique_filters, defaults={"value": str(float(value))}
-                            )
-
-            property = "category_prop"
-            if rule_property_list is None or property in rule_property_list:
-                metadata_obj = RuleResultMetadata.objects.get(short_name=property)
-                if (
-                    metadata_obj.applies_to_election(election_obj)
-                    and election_obj.has_categories
-                ):
-                    unique_filters = {
-                        "rule_result": rule_result_object,
-                        "metadata": metadata_obj,
-                    }
-                    if override or not exists_in_database(
-                        RuleResultDataProperty, **unique_filters
-                    ):
-                        print_if_verbose("Computing {}.".format(property), 3, verbosity)
-                        instance, profile = election_parser.get_parsed_election()
-                        value = category.category_proportionality(
-                            instance, profile, budget_allocation
-                        )
-                        RuleResultDataProperty.objects.update_or_create(
-                            **unique_filters, defaults={"value": str(float(value))}
-                        )
-
-            if len(budget_allocation) > 0:
-                property = "med_select_cost"
-                if rule_property_list is None or property in rule_property_list:
-                    metadata_obj = RuleResultMetadata.objects.get(short_name=property)
-                    if metadata_obj.applies_to_election(election_obj):
-                        unique_filters = {
-                            "rule_result": rule_result_object,
-                            "metadata": metadata_obj,
-                        }
-                        if override or not exists_in_database(
-                            RuleResultDataProperty, **unique_filters
-                        ):
-                            print_if_verbose(
-                                "Computing {}.".format(property), 3, verbosity
-                            )
-                            value = instanceproperties.median_project_cost(
-                                budget_allocation
-                            )
-                            RuleResultDataProperty.objects.update_or_create(
-                                **unique_filters, defaults={"value": str(float(value))}
-                            )
-
-            property = "agg_nrmcost_sat"
-            if rule_property_list is None or property in rule_property_list:
-                metadata_obj = RuleResultMetadata.objects.get(short_name=property)
-                if metadata_obj.applies_to_election(election_obj):
-                    unique_filters = {
-                        "rule_result": rule_result_object,
-                        "metadata": metadata_obj,
-                    }
-                    if override or not exists_in_database(
-                        RuleResultDataProperty, **unique_filters
-                    ):
-                        print_if_verbose("Computing {}.".format(property), 3, verbosity)
-                        instance, profile = election_parser.get_parsed_election()
-                        value = satisfaction_histogram(
-                            instance,
-                            profile,
-                            budget_allocation,
-                            Cost_Sat,
-                            max_satisfaction=max_budget_allocation_cost(
-                                instance, instance.budget_limit
-                            ),
-                            num_bins=21,
-                        )
-                        RuleResultDataProperty.objects.update_or_create(
-                            **unique_filters, defaults={"value": json.dumps(value)}
-                        )
 
 
 def export_rule_result_properties(
@@ -240,109 +118,21 @@ def export_rule_result_properties(
                 for project in rule_result_object.selected_projects.all()
             ]
 
-            for property in satisfaction_property_mapping:
-                if rule_property_list == None or property in rule_property_list:
-                    metadata_obj = RuleResultMetadata.objects.get(short_name=property)
-                    if metadata_obj.applies_to_election(election_obj):
-                        unique_filters = {
-                            "rule_result": rule_result_object,
-                            "metadata": metadata_obj,
-                        }
-                        print_if_verbose("Computing {}.".format(property), 3, verbosity)
-                        instance, profile = election_parser.get_parsed_election()
-                        value = votersatisfaction.avg_satisfaction(
-                            instance,
-                            profile,
-                            budget_allocation,
-                            satisfaction_property_mapping[property]["sat_class"],
-                        )
-                        normalizer = 1
-                        if (
-                            satisfaction_property_mapping[property]["normalizer_func"]
-                            != None
-                        ):
-                            normalizer = satisfaction_property_mapping[property][
-                                "normalizer_func"
-                            ](instance, instance.budget_limit)
-
-                        with open(f"{export_file}", "a") as f:
-                            f.write(
-                                f'"{election_obj.name}";{rule_result_object.rule.abbreviation};{property};{float(value / normalizer)}\n'
-                            )
-
-            for property in gini_property_mapping:
+            for property in rule_result_property_mapping:
                 if rule_property_list == None or property in rule_property_list:
                     metadata_obj = RuleResultMetadata.objects.get(short_name=property)
                     if metadata_obj.applies_to_election(election_obj):
                         print_if_verbose("Computing {}.".format(property), 3, verbosity)
                         instance, profile = election_parser.get_parsed_election()
-                        value = votersatisfaction.gini_coefficient_of_satisfaction(
+                        value = rule_result_property_mapping[property](
                             instance,
                             profile,
                             budget_allocation,
-                            gini_property_mapping[property],
-                            invert=True,
                         )
-
                         with open(f"{export_file}", "a") as f:
                             f.write(
                                 f'"{election_obj.name}";{rule_result_object.rule.abbreviation};{property};{float(value)}\n'
                             )
-
-            property = "category_prop"
-            if rule_property_list is None or property in rule_property_list:
-                metadata_obj = RuleResultMetadata.objects.get(short_name=property)
-                if (
-                    metadata_obj.applies_to_election(election_obj)
-                    and election_obj.has_categories
-                ):
-                    print_if_verbose("Computing {}.".format(property), 3, verbosity)
-                    instance, profile = election_parser.get_parsed_election()
-                    value = category.category_proportionality(
-                        instance, profile, budget_allocation
-                    )
-
-                    with open(f"{export_file}", "a") as f:
-                        f.write(
-                            f'"{election_obj.name}";{rule_result_object.rule.abbreviation};{property};{float(value)}\n'
-                        )
-
-            if len(budget_allocation) > 0:
-                property = "med_select_cost"
-                if rule_property_list is None or property in rule_property_list:
-                    metadata_obj = RuleResultMetadata.objects.get(short_name=property)
-                    if metadata_obj.applies_to_election(election_obj):
-                        print_if_verbose("Computing {}.".format(property), 3, verbosity)
-                        value = instanceproperties.median_project_cost(
-                            budget_allocation
-                        )
-
-                        with open(f"{export_file}", "a") as f:
-                            f.write(
-                                f'"{election_obj.name}";{rule_result_object.rule.abbreviation};{property};{float(value)}\n'
-                            )
-
-            property = "agg_nrmcost_sat"
-            if rule_property_list is None or property in rule_property_list:
-                metadata_obj = RuleResultMetadata.objects.get(short_name=property)
-                if metadata_obj.applies_to_election(election_obj):
-                    print_if_verbose("Computing {}.".format(property), 3, verbosity)
-                    instance, profile = election_parser.get_parsed_election()
-                    value = satisfaction_histogram(
-                        instance,
-                        profile,
-                        budget_allocation,
-                        Cost_Sat,
-                        max_satisfaction=max_budget_allocation_cost(
-                            instance, instance.budget_limit
-                        ),
-                        num_bins=21,
-                    )
-
-                    with open(f"{export_file}", "a") as f:
-                        f.write(
-                            f'"{election_obj.name}";{rule_result_object.rule.abbreviation};{property};{json.dumps(value)}\n'
-                        )
 
 
 class Command(BaseCommand):

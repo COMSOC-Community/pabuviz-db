@@ -1,6 +1,12 @@
 import pabutools.fractions as fractions
 from pabutools import election as pbelection, rules
-from pabutools.analysis import instanceproperties, profileproperties
+from pabutools.analysis import (
+    instanceproperties,
+    profileproperties,
+    votersatisfaction,
+    category,
+    satisfaction_histogram,
+)
 from pabutools.election import (
     Cardinality_Sat,
     Cost_Sat,
@@ -9,8 +15,11 @@ from pabutools.election import (
     CC_Sat,
     Additive_Cardinal_Sat,
     Additive_Borda_Sat,
+    Additive_Cost_Sqrt_Sat,
     max_budget_allocation_cardinality,
     max_budget_allocation_cost,
+    Effort_Sat,
+    Additive_Cardinal_Relative_Sat,
 )
 
 from pb_visualizer.models import *
@@ -34,9 +43,10 @@ profile_property_mapping = {
     "med_total_score": profileproperties.median_total_score,
 }
 
+
 satisfaction_property_mapping = {
-    "avg_card_sat": {"sat_class": Cardinality_Sat, "normalizer_func": None},
-    "avg_cost_sat": {"sat_class": Cost_Sat, "normalizer_func": None},
+    "avg_card_sat": {"sat_class": Cardinality_Sat},
+    "avg_cost_sat": {"sat_class": Cost_Sat},
     "avg_nrmcard_sat": {
         "sat_class": Cardinality_Sat,
         "normalizer_func": max_budget_allocation_cardinality,
@@ -45,22 +55,72 @@ satisfaction_property_mapping = {
         "sat_class": Cost_Sat,
         "normalizer_func": max_budget_allocation_cost,
     },
-    "avg_relcard_sat": {"sat_class": Relative_Cardinality_Sat, "normalizer_func": None},
-    "avg_relcost_sat": {
-        "sat_class": Relative_Cost_Approx_Normaliser_Sat,
-        "normalizer_func": None,
-    },
-    "happiness": {"sat_class": CC_Sat, "normalizer_func": None},
+    "avg_relcard_sat": {"sat_class": Relative_Cardinality_Sat},
+    "avg_relcost_sat": {"sat_class": Relative_Cost_Approx_Normaliser_Sat},
+    "avg_sat_cardbal": {"sat_class": Additive_Cardinal_Sat},
+    "avg_relsat_cardbal": {"sat_class": Additive_Cardinal_Relative_Sat},
+    "avg_borda_sat": {"sat_class": Additive_Borda_Sat},
 }
 
-gini_property_mapping = {
-    "equality": Cost_Sat,
-    # "fairness": Effort_Sat,
+rule_result_property_mapping = {
+    "inverted_cost_gini": lambda inst, profile, alloc: votersatisfaction.gini_coefficient_of_satisfaction(
+        inst,
+        profile,
+        alloc,
+        Cost_Sat,
+        invert=True,
+    ),
+    "inverted_cardbal_gini": lambda inst, profile, alloc: votersatisfaction.gini_coefficient_of_satisfaction(
+        inst,
+        profile,
+        alloc,
+        Additive_Cardinal_Sat,
+        invert=True,
+    ),
+    "inverted_borda_gini": lambda inst, profile, alloc: votersatisfaction.gini_coefficient_of_satisfaction(
+        inst,
+        profile,
+        alloc,
+        Additive_Borda_Sat,
+        invert=True,
+    ),
+    "prop_pos_sat": lambda inst, profile, alloc: votersatisfaction.percent_positive_satisfaction(
+        profile, alloc, CC_Sat
+    ),
+    "prop_pos_sat_ord": lambda inst, profile, alloc: votersatisfaction.percent_positive_satisfaction(
+        profile, alloc, Additive_Borda_Sat
+    ),
+    "category_prop": category.category_proportionality,
+    "med_select_cost": lambda inst, profile, alloc: instanceproperties.median_project_cost(
+        alloc
+    ),
+    "agg_nrmcost_sat": lambda inst, profile, alloc: satisfaction_histogram(
+        inst,
+        profile,
+        alloc,
+        Cost_Sat,
+        max_satisfaction=max_budget_allocation_cost(inst, inst.budget_limit),
+        num_bins=21,
+    ),
 }
+for abb, params in satisfaction_property_mapping:
+    if "normalizer_func" in params:
+        rule_result_property_mapping[abb] = lambda inst, profile, alloc: float(
+            votersatisfaction.avg_satisfaction(
+                inst, profile, alloc, params["sat_class"]
+            ),
+            params["normalizer_func"](inst, inst.budget_limit),
+        )
+    else:
+        rule_result_property_mapping[
+            abb
+        ] = lambda inst, profile, alloc: votersatisfaction.avg_satisfaction(
+            inst, profile, alloc, params["sat_class"]
+        )
 
 
 def rule_mapping(budget):
-    return {
+    res = {
         # approval
         "greedy_card": {
             "func": rules.greedy_utilitarian_welfare,
@@ -81,37 +141,6 @@ def rule_mapping(budget):
         "max_cost": {
             "func": rules.max_additive_utilitarian_welfare,
             "params": {"sat_class": Cost_Sat},
-        },
-        "mes_uncompleted": {
-            "func": rules.method_of_equal_shares,
-            "params": {"sat_class": Cost_Sat},
-        },
-        "mes": {
-            "func": rules.completion_by_rule_combination,
-            "params": {
-                "rule_sequence": [
-                    rules.exhaustion_by_budget_increase,
-                    rules.greedy_utilitarian_welfare,
-                ],
-                "rule_params": [
-                    {
-                        "rule": rules.method_of_equal_shares,
-                        "rule_params": {"sat_class": Cost_Sat},
-                        "budget_step": float(budget) / 100,
-                    },
-                    {"sat_class": Cost_Sat},
-                ],
-            },
-        },
-        "mes_greedy_cost": {
-            "func": rules.completion_by_rule_combination,
-            "params": {
-                "rule_sequence": [
-                    rules.method_of_equal_shares,
-                    rules.greedy_utilitarian_welfare,
-                ],
-                "rule_params": [{"sat_class": Cost_Sat}, {"sat_class": Cost_Sat}],
-            },
         },
         "seq_phragmen": {"func": rules.sequential_phragmen, "params": {}},
         # cardinal
@@ -205,6 +234,49 @@ def rule_mapping(budget):
             },
         },
     }
+
+    for abb, sat in [
+        ("cost", Cost_Sat),
+        ("card", Cardinality_Sat),
+        ("effort", Effort_Sat),
+        ("sqrt", Additive_Cost_Sqrt_Sat),
+    ]:
+        res.update(
+            {
+                f"mes_{abb}_uncompleted": {
+                    "func": rules.method_of_equal_shares,
+                    "params": {"sat_class": sat},
+                },
+                f"mes_{abb}": {
+                    "func": rules.completion_by_rule_combination,
+                    "params": {
+                        "rule_sequence": [
+                            rules.exhaustion_by_budget_increase,
+                            rules.greedy_utilitarian_welfare,
+                        ],
+                        "rule_params": [
+                            {
+                                "rule": rules.method_of_equal_shares,
+                                "rule_params": {"sat_class": sat},
+                                "budget_step": float(budget) / 100,
+                            },
+                            {"sat_class": sat},
+                        ],
+                    },
+                },
+                f"mes_{abb}_greedy": {
+                    "func": rules.completion_by_rule_combination,
+                    "params": {
+                        "rule_sequence": [
+                            rules.method_of_equal_shares,
+                            rules.greedy_utilitarian_welfare,
+                        ],
+                        "rule_params": [{"sat_class": sat}, {"sat_class": sat}],
+                    },
+                },
+            }
+        )
+    return res
 
 
 def project_object_to_pabutools(project: Project):
