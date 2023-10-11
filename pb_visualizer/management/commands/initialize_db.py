@@ -937,7 +937,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
         short_name="prop_pos_sat_ord",
         defaults={
-            "name": "proportion of voters with positive satisfaction",
+            "name": "proportion of voters with positive Borda satisfaction",
             "description": "percentage of voters who enjoy positive (thus non-zero) satisfaction for the selected "
             "projects",
             "inner_type": "float",

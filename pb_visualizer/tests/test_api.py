@@ -1,14 +1,9 @@
-from curses import meta
-from importlib import metadata
-import time
 from django.test import TestCase
 from pb_visualizer.management.commands.add_election import add_election
 from pb_visualizer.management.commands.initialize_db import initialize_db
 from pb_visualizer.models import *
 from pb_visualizer.api import *
-import os
-from django.db.models import Q, Avg
-
+import numpy as np
 
 # Create your tests here.
 class TestApi(TestCase):
@@ -17,7 +12,7 @@ class TestApi(TestCase):
 
     def test_election_filter(self):
         greedy_obj = Rule.objects.get(abbreviation="greedy_cost")
-        mes_obj = Rule.objects.get(abbreviation="mes")
+        mes_obj = Rule.objects.get(abbreviation="mes_cost")
 
         for i in range(3):
             election_obj = Election.objects.create(
@@ -112,7 +107,7 @@ class TestApi(TestCase):
         assert len(election_query_set) == 0
 
         prop_list = ["avg_card_sat", "avg_cost_sat"]
-        rule_list = ["mes", "greedy_cost"]
+        rule_list = ["mes_cost", "greedy_cost"]
 
         election_query_set = filter_elections(avg_ballot_len={"min": 1})
         assert len(election_query_set) == 2
@@ -137,7 +132,7 @@ class TestApi(TestCase):
         assert len(election_query_set) == 1
         assert election_query_set.first().name == "e0"
 
-        election_query_set = filter_elections(rule=["greedy_cost", "mes"])
+        election_query_set = filter_elections(rule=["greedy_cost", "mes_cost"])
         assert len(election_query_set) == 2
 
         election_query_set = Election.objects.all()
@@ -155,7 +150,7 @@ class TestApi(TestCase):
             )
 
             greedy_obj = Rule.objects.get(abbreviation="greedy_cost")
-            mes_obj = Rule.objects.get(abbreviation="mes")
+            mes_obj = Rule.objects.get(abbreviation="mes_cost")
 
             greedy_result_obj = RuleResult.objects.create(
                 rule=greedy_obj, election=election_obj
@@ -193,13 +188,13 @@ class TestApi(TestCase):
             )
 
         prop_list = ["avg_card_sat", "avg_cost_sat"]
-        rule_list = ["mes", "greedy_cost"]
+        rule_list = ["mes_cost", "greedy_cost"]
 
         avg_values = get_rule_result_average_data_properties(rule_list, prop_list)
 
         assert avg_values["data"] == {
             "greedy_cost": {"avg_card_sat": 4, "avg_cost_sat": 3},
-            "mes": {"avg_card_sat": 6, "avg_cost_sat": 5},
+            "mes_cost": {"avg_card_sat": 6, "avg_cost_sat": 5},
         }
         assert avg_values["meta_data"]["num_elections"] == 2
 
@@ -210,7 +205,7 @@ class TestApi(TestCase):
             )
 
             greedy_obj = Rule.objects.get(abbreviation="greedy_cost")
-            mes_obj = Rule.objects.get(abbreviation="mes")
+            mes_obj = Rule.objects.get(abbreviation="mes_cost")
 
             greedy_result_obj = RuleResult.objects.create(
                 rule=greedy_obj, election=election_obj
@@ -261,13 +256,13 @@ class TestApi(TestCase):
                     id=8, rule_result=mes_result_obj, metadata=avg_sat_obj, value=0.5
                 )
 
-        rule_list = ["mes", "greedy_cost"]
+        rule_list = ["mes_cost", "greedy_cost"]
         hist_data = get_satisfaction_histogram(rule_list)
 
         assert np.all(
             hist_data["data"]["greedy_cost"]["hist_data"] == [0.25, 0.25, 0.5]
         )
-        assert np.all(hist_data["data"]["mes"]["hist_data"] == [0.5, 0.25, 0.25])
+        assert np.all(hist_data["data"]["mes_cost"]["hist_data"] == [0.5, 0.25, 0.25])
         assert hist_data["meta_data"]["num_elections"] == 2
 
     def test_get_election_property_histogram(self):

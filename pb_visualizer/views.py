@@ -2,18 +2,9 @@ import json
 from time import sleep
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from rest_framework import status
-from django.http import JsonResponse
 
-from pb_visualizer.models import Rule
 from pb_visualizer.serializers import *
 from pb_visualizer.api import *
-
-from collections import defaultdict
-from django.core import serializers
-from django.db.models import Q, Avg
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_control
 
 
 caching_parameters = {"cache-control": "max-age=300"}
@@ -69,7 +60,7 @@ def ballot_type_list(request):
 @api_view(["GET"])
 def rule_result_property_list(request):
     if request.method == "GET":
-        property_short_names = json.loads(request.GET.get("property_short_names", "[]"))
+        property_short_names = json.loads(request.GET.get("property_short_names", "null"))
         data = get_rule_result_property_list(property_short_names)
         return Response(data, headers=caching_parameters)
 
@@ -77,7 +68,7 @@ def rule_result_property_list(request):
 @api_view(["GET"])
 def filterable_election_property_list(request):
     if request.method == "GET":
-        property_short_names = json.loads(request.GET.get("property_short_names", "[]"))
+        property_short_names = json.loads(request.GET.get("property_short_names", "null"))
         ballot_type = json.loads(request.GET.get("ballot_type", "null"))
         data = get_filterable_election_property_list(
             property_short_names, ballot_type=ballot_type
