@@ -1,47 +1,28 @@
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 import datetime
 import json
-import math
 from time import sleep
 
-import numpy as np
 
 from .models import Rule
 from .serializers import *
 
-from collections import defaultdict
-from django.core import serializers
 from django.db import models
 from django.db.models import (
     F,
     Q,
     Avg,
     Sum,
-    Case,
-    When,
     FloatField,
-    BooleanField,
     QuerySet,
     Min,
     Max,
     Count,
-    ExpressionWrapper,
-    Value,
 )
 from django.db.models.functions import Cast, Floor, Ln
-from django.core.exceptions import FieldDoesNotExist
 
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import status
-
-from pb_visualizer.pabutools import (
-    election_object_to_pabutools,
-    project_object_to_pabutools,
-)
-from pabutools.election.satisfaction import (
-    SatisfactionProfile,
-    Relative_Cost_Approx_Normaliser_Sat,
-)
 
 
 class ApiExcepetion(PermissionDenied):
@@ -165,7 +146,7 @@ def get_rule_result_property_list(
     property_short_names: Iterable[str] = None,
 ) -> list[dict]:
     query = RuleResultMetadata.objects.all()
-    if property_short_names:
+    if property_short_names != None:
         query = query.filter(short_name__in=property_short_names)
 
     serializer = RuleResultMetadataSerializer(query, many=True)
@@ -370,6 +351,13 @@ def histogram_data_from_query_set_and_field(
         query_sets_by_category = {
             category: query_set.filter(**{by_category["field_name"]: category})
             for category in by_category["categories"]
+        }
+        
+    if (not query_set.exists()):
+        return {
+            "bins": [],
+            "bin_midpoints": [],
+            "values": [],
         }
 
     min_value = float(query_set.aggregate(Min(field_name))[field_name + "__min"])

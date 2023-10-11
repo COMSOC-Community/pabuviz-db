@@ -846,7 +846,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
         short_name="avg_borda_sat",
         defaults={
-            "name": "average satisfaction",
+            "name": "average Borda satisfaction",
             "description": "average total satisfaction of the voters, the satisfaction being the sum of the Borda "
             "scores of the selected projects",
             "inner_type": "float",
@@ -904,7 +904,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
         short_name="inverted_borda_gini",
         defaults={
-            "name": "inverted cost Gini",
+            "name": "inverted Borda Gini",
             "description": "inverted Gini coefficient of the satisfaction of the voters: the total Borda score of the "
             "selected projects",
             "inner_type": "float",
@@ -937,7 +937,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
         short_name="prop_pos_sat_ord",
         defaults={
-            "name": "proportion of voters with positive satisfaction",
+            "name": "proportion of voters with positive Borda satisfaction",
             "description": "percentage of voters who enjoy positive (thus non-zero) satisfaction for the selected "
             "projects",
             "inner_type": "float",
