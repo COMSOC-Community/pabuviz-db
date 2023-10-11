@@ -40,28 +40,30 @@ def compute_rule_results(
             rules = rule_mapping(election_obj.budget)
             for rule in rules:
                 if rule_list is None or rule in rule_list:
-                    rule_obj = Rule.objects.get(abbreviation=rule)
-                    if rule_obj.applies_to_election(election_obj):
-                        unique_filters = {"election": election_obj, "rule": rule_obj}
-                        if override or not exists_in_database(
-                            RuleResult, **unique_filters
-                        ):
-                            print_if_verbose(f"\tComputing {rule}.", 2, verbosity)
-                            rule_result_obj, _ = RuleResult.objects.update_or_create(
-                                **unique_filters
-                            )
-                            instance, profile = election_parser.get_parsed_election()
-                            pabutools_result = rules[rule]["func"](
-                                instance, profile, **rules[rule]["params"]
-                            )
-                            rule_result_obj.selected_projects.set(
-                                [
-                                    Project.objects.get(
-                                        election=election_obj, project_id=project.name
-                                    )
-                                    for project in pabutools_result
-                                ]
-                            )
+                    rule_obj = Rule.objects.filter(abbreviation=rule)
+                    if rule_obj.exists():
+                        rule_obj = rule_obj.first()
+                        if rule_obj.applies_to_election(election_obj):
+                            unique_filters = {"election": election_obj, "rule": rule_obj}
+                            if override or not exists_in_database(
+                                RuleResult, **unique_filters
+                            ):
+                                print_if_verbose(f"\tComputing {rule}.", 2, verbosity)
+                                rule_result_obj, _ = RuleResult.objects.update_or_create(
+                                    **unique_filters
+                                )
+                                instance, profile = election_parser.get_parsed_election()
+                                pabutools_result = rules[rule]["func"](
+                                    instance, profile, **rules[rule]["params"]
+                                )
+                                rule_result_obj.selected_projects.set(
+                                    [
+                                        Project.objects.get(
+                                            election=election_obj, project_id=project.name
+                                        )
+                                        for project in pabutools_result
+                                    ]
+                                )
 
 
 def export_rule_results(
@@ -94,16 +96,18 @@ def export_rule_results(
             rules = rule_mapping(election_obj.budget)
             for rule in rules:
                 if rule_list is None or rule in rule_list:
-                    rule_obj = Rule.objects.get(abbreviation=rule)
-                    if rule_obj.applies_to_election(election_obj):
-                        print(f"\tRunning {rule}...")
-                        instance, profile = election_parser.get_parsed_election()
-                        pabutools_result = rules[rule]["func"](
-                            instance, profile, **rules[rule]["params"]
-                        )
-                        with open(export_file, "a") as f:
-                            f.write(
-                                f'"{election_obj.name}";{rule};"{"#%#%#".join(p.name for p in pabutools_result)}"\n'
+                    rule_obj = Rule.objects.filter(abbreviation=rule)
+                    if rule_obj.exists():
+                        rule_obj = rule_obj.first()
+                        if rule_obj.applies_to_election(election_obj):
+                            print(f"\tRunning {rule}...")
+                            instance, profile = election_parser.get_parsed_election()
+                            pabutools_result = rules[rule]["func"](
+                                instance, profile, **rules[rule]["params"]
+                            )
+                            with open(export_file, "a") as f:
+                                f.write(
+                                    f'"{election_obj.name}";{rule};"{"#%#%#".join(p.name for p in pabutools_result)}"\n'
                             )
 
 
