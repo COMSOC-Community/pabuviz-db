@@ -258,7 +258,7 @@ def rule_mapping(budget):
                             {
                                 "rule": rules.method_of_equal_shares,
                                 "rule_params": {"sat_class": sat},
-                                "budget_step": float(budget) / 100,
+                                "budget_step": 10 * float(budget) / 100,
                             },
                             {"sat_class": sat},
                         ],

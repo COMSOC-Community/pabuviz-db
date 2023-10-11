@@ -26,7 +26,8 @@ def compute_rule_results(
     n_elections = len(election_query)
     for index, election_obj in enumerate(election_query):
         print_if_verbose(
-            f"Computing rule results of election {index + 1}/{n_elections}: {election_obj.name}",
+            f"Computing rule results of election {index + 1}/{n_elections}: {election_obj.name}\n"
+            f"{election_obj.num_votes} voters and {election_obj.num_projects} projects -- {election_obj.ballot_type.name}",
             1,
             verbosity,
             persist=True,
@@ -45,7 +46,7 @@ def compute_rule_results(
                         if override or not exists_in_database(
                             RuleResult, **unique_filters
                         ):
-                            print_if_verbose(f"Computing {rule}.", 2, verbosity)
+                            print_if_verbose(f"\tComputing {rule}.", 2, verbosity)
                             rule_result_obj, _ = RuleResult.objects.update_or_create(
                                 **unique_filters
                             )
@@ -83,7 +84,8 @@ def export_rule_results(
 
     for index, election_obj in enumerate(election_query):
         print(
-            f"Computing rule results of election {index + 1}/{n_elections}: {election_obj.name}"
+            f"Computing rule results of election {index + 1}/{n_elections}: {election_obj.name}\n"
+            f"{election_obj.num_votes} voters and {election_obj.num_projects} projects -- {election_obj.ballot_type.name}"
         )
         election_parser = LazyElectionParser(election_obj, use_db, 10000)
 
@@ -94,7 +96,7 @@ def export_rule_results(
                 if rule_list is None or rule in rule_list:
                     rule_obj = Rule.objects.get(abbreviation=rule)
                     if rule_obj.applies_to_election(election_obj):
-                        print(f"Running {rule}...")
+                        print(f"\tRunning {rule}...")
                         instance, profile = election_parser.get_parsed_election()
                         pabutools_result = rules[rule]["func"](
                             instance, profile, **rules[rule]["params"]

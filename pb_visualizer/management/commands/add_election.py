@@ -31,7 +31,7 @@ ballot_type_objs = {
 
 rule_abbreviation_mapping = {
     "greedy_cost": ["greedy_cost", "greedy"],
-    "mes": ["mes", "equalshares/add1"],
+    "mes_cost": ["mes", "equalshares/add1"],
 }
 
 rule_objs = {

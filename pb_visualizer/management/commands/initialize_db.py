@@ -509,7 +509,7 @@ def initialize_rules(ballot_type_objs):
     for mes_sat, mes_sat_long in [
         ("cost", "cost"),
         ("card", "cardinality"),
-        ("effort", "effort"),
+        # ("effort", "effort"),
         ("sqrt", "cost square root"),
     ]:
         order_priority += 1
