@@ -136,9 +136,9 @@ def get_project_list(election_name: int) -> list[dict]:
 
 
 def get_rule_family_list() -> list[dict]:
-    rule_family_query = RuleFamily.objects.all().filter()
+    rule_family_query = RuleFamily.objects.all().filter(parent_family__isnull=True)
     rule_family_serializer = RuleFamilyFullSerializer(rule_family_query, many=True)
-
+    
     return {"data": rule_family_serializer.data}
 
 

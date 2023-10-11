@@ -39,10 +39,17 @@ class RuleFamilySerializer(serializers.ModelSerializer):
 
 class RuleFamilyFullSerializer(serializers.ModelSerializer):
     elements = RuleSerializer(many=True, read_only=True)
+    sub_families = SerializerMethodField()
+
+    def get_sub_families(self, obj):
+        if obj.sub_families is not None:
+            return RuleFamilyFullSerializer(obj.sub_families, many=True).data
+        else:
+            return None
 
     class Meta:
         model = RuleFamily
-        fields = ("name", "abbreviation", "description", "elements")
+        fields = ("name", "abbreviation", "description", "elements", "sub_families", "applies_to")
 
 
 class BallotTypeSerializer(serializers.ModelSerializer):

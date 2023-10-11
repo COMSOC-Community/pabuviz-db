@@ -410,6 +410,14 @@ def initialize_rules(ballot_type_objs):
             "order_priority": order_priority,
         },
     )
+    greedy_obj.applies_to.set(
+        [
+            ballot_type_objs["approval"],
+            ballot_type_objs["ordinal"],
+            ballot_type_objs["cumulative"],
+            ballot_type_objs["cardinal"],
+        ]
+    )
 
     order_priority += 1
     max_sat_obj, _ = RuleFamily.objects.update_or_create(
@@ -419,6 +427,14 @@ def initialize_rules(ballot_type_objs):
             "description": "exact satisfaction maximisers",
             "order_priority": order_priority,
         },
+    )
+    max_sat_obj.applies_to.set(
+        [
+            ballot_type_objs["approval"],
+            ballot_type_objs["ordinal"],
+            ballot_type_objs["cumulative"],
+            ballot_type_objs["cardinal"],
+        ]
     )
 
     order_priority += 1
@@ -430,6 +446,14 @@ def initialize_rules(ballot_type_objs):
             "order_priority": order_priority,
         },
     )
+    mes_obj.applies_to.set(
+        [
+            ballot_type_objs["approval"],
+            ballot_type_objs["ordinal"],
+            ballot_type_objs["cumulative"],
+            ballot_type_objs["cardinal"],
+        ]
+    )
 
     order_priority += 1
     other_obj, _ = RuleFamily.objects.update_or_create(
@@ -440,6 +464,66 @@ def initialize_rules(ballot_type_objs):
             "order_priority": order_priority,
         },
     )
+    other_obj.applies_to.set(
+        [
+            ballot_type_objs["approval"],
+            ballot_type_objs["ordinal"],
+            ballot_type_objs["cumulative"],
+            ballot_type_objs["cardinal"],
+        ]
+    )
+
+    #  rule subfamilies
+    order_priority += 1
+    mes_card_obj, _ = RuleFamily.objects.update_or_create(
+        abbreviation="mes_card",
+        defaults={
+            "name": "methods of equal shares (card)",
+            "description": "methods of equal shares with cardinality satisfaction",
+            "order_priority": order_priority,
+            "parent_family": mes_obj
+        },
+    )
+    mes_card_obj.applies_to.set([ballot_type_objs["approval"]])
+
+    order_priority += 1
+    mes_cost_obj, _ = RuleFamily.objects.update_or_create(
+        abbreviation="mes_cost",
+        defaults={
+            "name": "methods of equal shares (cost)",
+            "description": "methods of equal shares with cost satisfaction",
+            "order_priority": order_priority,
+            "parent_family": mes_obj
+        },
+    )
+    mes_cost_obj.applies_to.set([ballot_type_objs["approval"]])
+
+
+    order_priority += 1
+    mes_effort_obj, _ = RuleFamily.objects.update_or_create(
+        abbreviation="mes_effort",
+        defaults={
+            "name": "methods of equal shares (effort)",
+            "description": "methods of equal shares with effort satisfaction",
+            "order_priority": order_priority,
+            "parent_family": mes_obj
+        },
+    )
+    mes_effort_obj.applies_to.set([ballot_type_objs["approval"]])
+
+
+    order_priority += 1
+    mes_sqrt_obj, _ = RuleFamily.objects.update_or_create(
+        abbreviation="mes_sqrt",
+        defaults={
+            "name": "methods of equal shares (sqrt)",
+            "description": "methods of equal shares with sqrt satisfaction",
+            "order_priority": order_priority,
+            "parent_family": mes_obj
+        },
+    )
+    mes_sqrt_obj.applies_to.set([ballot_type_objs["approval"]])
+
 
     # rules
 
@@ -506,11 +590,11 @@ def initialize_rules(ballot_type_objs):
     )
     rule_obj.applies_to.set([ballot_type_objs["approval"]])
 
-    for mes_sat, mes_sat_long in [
-        ("cost", "cost"),
-        ("card", "cardinality"),
-        # ("effort", "effort"),
-        ("sqrt", "cost square root"),
+    for mes_sat, mes_sat_long, mes_family_obj in [
+        ("cost", "cost", mes_cost_obj),
+        ("card", "cardinality", mes_card_obj),
+        # ("effort", "effort", mes_effort_obj),
+        ("sqrt", "cost square root", mes_sqrt_obj),
     ]:
         order_priority += 1
         rule_obj, _ = Rule.objects.update_or_create(
@@ -520,7 +604,7 @@ def initialize_rules(ballot_type_objs):
                 "description": f"method of equal shares with {mes_sat_long} satisfaction, completed via iterative "
                 f"budget increase and greedy ({mes_sat}) completion",
                 "order_priority": order_priority,
-                "rule_family": mes_obj,
+                "rule_family": mes_family_obj,
             },
         )
         rule_obj.applies_to.set([ballot_type_objs["approval"]])
@@ -533,7 +617,7 @@ def initialize_rules(ballot_type_objs):
                 "description": f"method of equal shares with {mes_sat_long} satisfaction, completed via greedy "
                 f"({mes_sat}) completion",
                 "order_priority": order_priority,
-                "rule_family": mes_obj,
+                "rule_family": mes_family_obj,
             },
         )
         rule_obj.applies_to.set([ballot_type_objs["approval"]])
@@ -545,7 +629,7 @@ def initialize_rules(ballot_type_objs):
                 "name": f"equal shares ({mes_sat}no completion)",
                 "description": f"method of equal shares with {mes_sat_long} satisfaction, not completed",
                 "order_priority": order_priority,
-                "rule_family": mes_obj,
+                "rule_family": mes_family_obj,
             },
         )
         rule_obj.applies_to.set([ballot_type_objs["approval"]])
@@ -938,7 +1022,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
         short_name="prop_pos_sat_ord",
         defaults={
             "name": "proportion of voters with positive Borda satisfaction",
-            "description": "percentage of voters who enjoy positive (thus non-zero) satisfaction for the selected "
+            "description": "percentage of voters who enjoy positive (thus non-zero) Borda satisfaction for the selected "
             "projects",
             "inner_type": "float",
             "range": "01",
