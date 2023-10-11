@@ -31,7 +31,8 @@ def compute_rule_result_properties(
     n_elections = len(election_query)
     for index, election_obj in enumerate(election_query):
         print_if_verbose(
-            f"Computing rule results of election {index + 1}/{n_elections}: {election_obj.name}",
+            f"Computing rule results of election {index + 1}/{n_elections}: {election_obj.name}"
+            f"{election_obj.num_votes} voters and {election_obj.num_projects} projects -- {election_obj.ballot_type.name}",
             1,
             verbosity,
             persist=True,
@@ -52,7 +53,7 @@ def compute_rule_result_properties(
                 for project in rule_result_object.selected_projects.all()
             ]
 
-            for property in rule_result_property_mapping:
+            for property, prop_func in rule_result_property_mapping.items():
                 if rule_property_list == None or property in rule_property_list:
                     metadata_obj = RuleResultMetadata.objects.get(short_name=property)
                     if metadata_obj.applies_to_election(election_obj):
@@ -67,9 +68,7 @@ def compute_rule_result_properties(
                                 "Computing {}.".format(property), 3, verbosity
                             )
                             instance, profile = election_parser.get_parsed_election()
-                            value = rule_result_property_mapping[property](
-                                instance, profile, budget_allocation
-                            )
+                            value = prop_func(instance, profile, budget_allocation)
                             RuleResultDataProperty.objects.update_or_create(
                                 **unique_filters,
                                 defaults={"value": str(value)},
@@ -96,42 +95,30 @@ def export_rule_result_properties(
         f.write(";".join(headers) + "\n")
 
     for index, election_obj in enumerate(election_query):
-        print_if_verbose(
-            f"Exporting rule results of election {index + 1}/{n_elections}: {election_obj.name}",
-            1,
-            verbosity,
-            persist=True,
+        print(f"Exporting rule results of election {index + 1}/{n_elections}: {election_obj.name}\n"
+              f"{election_obj.num_votes} voters and {election_obj.num_projects} projects -- "
+              f"{election_obj.ballot_type.name}"
         )
         election_parser = LazyElectionParser(election_obj, use_db, 10000)
         election_obj = election_parser.get_election_obj()
 
         for rule_result_object in RuleResult.objects.filter(election=election_obj):
-            print_if_verbose(
-                "Computing properties for {} results.".format(
-                    rule_result_object.rule.abbreviation
-                ),
-                2,
-                verbosity,
-            )
+            print(f"\tComputing properties for the result of {rule_result_object.rule.abbreviation}")
             budget_allocation = [
                 project_object_to_pabutools(project)
                 for project in rule_result_object.selected_projects.all()
             ]
 
-            for property in rule_result_property_mapping:
+            for property, prop_func in rule_result_property_mapping.items():
                 if rule_property_list == None or property in rule_property_list:
                     metadata_obj = RuleResultMetadata.objects.get(short_name=property)
                     if metadata_obj.applies_to_election(election_obj):
-                        print_if_verbose("Computing {}.".format(property), 3, verbosity)
+                        print(f"\t\tProperty: {property}")
                         instance, profile = election_parser.get_parsed_election()
-                        value = rule_result_property_mapping[property](
-                            instance,
-                            profile,
-                            budget_allocation,
-                        )
+                        value = prop_func(instance, profile, budget_allocation)
                         with open(f"{export_file}", "a") as f:
                             f.write(
-                                f'"{election_obj.name}";{rule_result_object.rule.abbreviation};{property};{float(value)}\n'
+                                f'"{election_obj.name}";{rule_result_object.rule.abbreviation};{property};{str(value)}\n'
                             )
 
 

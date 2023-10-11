@@ -19,6 +19,7 @@ def import_election_properties(instance_file_path, profile_file_path, override):
                 if override or not exists_in_database(
                     ElectionDataProperty, **unique_filters
                 ):
+                    print(f"Importing for {election_obj.name} and {metadata_obj.name}")
                     ElectionDataProperty.objects.update_or_create(
                         **unique_filters, defaults={"value": row["value"]}
                     )

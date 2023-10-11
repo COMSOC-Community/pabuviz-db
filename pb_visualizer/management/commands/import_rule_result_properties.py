@@ -34,9 +34,6 @@ def import_rule_results_properties(file_path, override):
                 print(
                     f"Importing for {election_obj.name} -- {rule_obj.abbreviation} and {metadata_obj.name}"
                 )
-                rule_result_obj, _ = RuleResult.objects.update_or_create(
-                    **unique_filters
-                )
                 RuleResultDataProperty.objects.update_or_create(
                     **unique_filters, defaults={"value": row["value"]}
                 )

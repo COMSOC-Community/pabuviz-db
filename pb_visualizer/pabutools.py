@@ -43,7 +43,6 @@ profile_property_mapping = {
     "med_total_score": profileproperties.median_total_score,
 }
 
-
 satisfaction_property_mapping = {
     "avg_card_sat": {"sat_class": Cardinality_Sat},
     "avg_cost_sat": {"sat_class": Cost_Sat},
@@ -61,6 +60,7 @@ satisfaction_property_mapping = {
     "avg_relsat_cardbal": {"sat_class": Additive_Cardinal_Relative_Sat},
     "avg_borda_sat": {"sat_class": Additive_Borda_Sat},
 }
+
 
 rule_result_property_mapping = {
     "inverted_cost_gini": lambda inst, profile, alloc: votersatisfaction.gini_coefficient_of_satisfaction(
@@ -105,17 +105,15 @@ rule_result_property_mapping = {
 }
 for abb, params in satisfaction_property_mapping.items():
     if "normalizer_func" in params:
-        rule_result_property_mapping[abb] = lambda inst, profile, alloc: float(fractions.frac(
+        rule_result_property_mapping[abb] = lambda inst, profile, alloc, sat_class=params["sat_class"], norm=params["normalizer_func"]: float(fractions.frac(
             votersatisfaction.avg_satisfaction(
-                inst, profile, alloc, params["sat_class"]
+                inst, profile, alloc, sat_class
             ),
-            params["normalizer_func"](inst, inst.budget_limit)
+            norm(inst, inst.budget_limit)
         ))
     else:
-        rule_result_property_mapping[
-            abb
-        ] = lambda inst, profile, alloc: votersatisfaction.avg_satisfaction(
-            inst, profile, alloc, params["sat_class"]
+        rule_result_property_mapping[abb] = lambda inst, profile, alloc, sat_class=params["sat_class"]: votersatisfaction.avg_satisfaction(
+            inst, profile, alloc, sat_class
         )
 
 
@@ -193,7 +191,7 @@ def rule_mapping(budget):
         # ordinal
         "greedy_borda": {
             "func": rules.greedy_utilitarian_welfare,
-            "params": {"sat_class": Additive_Borda_Sat},
+            "params": {"sat_class": Additive_Borda_Sat, "is_sat_additive": True},
         },
         "max_borda": {
             "func": rules.max_additive_utilitarian_welfare,
@@ -216,7 +214,7 @@ def rule_mapping(budget):
                         "rule_params": {"sat_class": Additive_Borda_Sat},
                         "budget_step": float(budget) / 100,
                     },
-                    {"sat_class": Additive_Borda_Sat},
+                    {"sat_class": Additive_Borda_Sat, "is_sat_additive": True},
                 ],
             },
         },
@@ -289,7 +287,7 @@ def project_object_to_pabutools(project: Project):
 
 
 def election_object_to_pabutools(
-    election: Election,
+        election: Election,
 ) -> tuple[pbelection.Instance, pbelection.Profile]:
     categories = {cat.name for cat in election.categories.all()}
     targets = {tar.name for tar in election.targets.all()}
