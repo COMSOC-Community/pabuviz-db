@@ -87,7 +87,7 @@ def export_election_properties(
     n_elections = len(election_query)
 
     headers = ["election_name", "property_short_name", "value"]
-    with open(f"{export_file_root}_ElectionProperties.csv", "w") as f:
+    with open(f"{export_file_root}_InstanceProperties.csv", "w") as f:
         f.write(";".join(headers) + "\n")
     with open(f"{export_file_root}_ProfileProperties.csv", "w") as f:
         f.write(";".join(headers) + "\n")
@@ -107,7 +107,7 @@ def export_election_properties(
             if metadata_obj.applies_to_election(election_obj):
                 instance, profile = election_parser.get_parsed_election()
                 prop_value = instance_property_mapping[instance_property](instance)
-                with open(f"{export_file_root}_ElectionProperties.csv", "a") as f:
+                with open(f"{export_file_root}_InstanceProperties.csv", "a") as f:
                     f.write(f'"{election_obj.name}";{instance_property};{prop_value}\n')
 
         # we now compute the profile properties
