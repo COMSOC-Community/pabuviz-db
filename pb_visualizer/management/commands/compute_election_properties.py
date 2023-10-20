@@ -13,13 +13,14 @@ from pb_visualizer.pabutools import (
 
 
 def compute_election_properties(
-    election_names=None,
-    exact=False,
+    election_names: list[str]|None = None,
+    exact: bool = False,
     override: bool = False,
+    use_db: bool = False,
+    database: str = "default",
     verbosity=1,
-    use_db=False,
 ) -> None:
-    election_query = Election.objects.all()
+    election_query = Election.objects.using(database).all()
     if election_names is not None:
         election_query = election_query.filter(name__in=election_names)
     if not exact:
@@ -36,14 +37,14 @@ def compute_election_properties(
 
         # we first compute the instance properties
         for instance_property in instance_property_mapping:
-            metadata_obj = ElectionMetadata.objects.get(short_name=instance_property)
+            metadata_obj = ElectionMetadata.objects.using(database).get(short_name=instance_property)
             if metadata_obj.applies_to_election(election_obj):
                 unique_filters = {"election": election_obj, "metadata": metadata_obj}
                 if override or not exists_in_database(
-                    ElectionDataProperty, **unique_filters
+                    ElectionDataProperty, database, **unique_filters
                 ):
                     instance, profile = election_parser.get_parsed_election()
-                    ElectionDataProperty.objects.update_or_create(
+                    ElectionDataProperty.objects.using(database).update_or_create(
                         **unique_filters,
                         defaults={
                             "value": instance_property_mapping[instance_property](
@@ -54,14 +55,14 @@ def compute_election_properties(
 
         # we now compute the profile properties
         for profile_property in profile_property_mapping:
-            metadata_obj = ElectionMetadata.objects.get(short_name=profile_property)
+            metadata_obj = ElectionMetadata.objects.using(database).get(short_name=profile_property)
             if metadata_obj.applies_to_election(election_obj):
                 unique_filters = {"election": election_obj, "metadata": metadata_obj}
                 if override or not exists_in_database(
-                    ElectionDataProperty, **unique_filters
+                    ElectionDataProperty, database, **unique_filters
                 ):
                     instance, profile = election_parser.get_parsed_election()
-                    ElectionDataProperty.objects.update_or_create(
+                    ElectionDataProperty.objects.using(database).update_or_create(
                         **unique_filters,
                         defaults={
                             "value": profile_property_mapping[profile_property](
@@ -73,13 +74,14 @@ def compute_election_properties(
 
 def export_election_properties(
     export_file_root: str,
-    election_names=None,
-    exact=False,
+    election_names: list[str]|None = None,
+    exact: bool = False,
     override: bool = False,
+    use_db: bool = False,
+    database: str = "default",
     verbosity=1,
-    use_db=False,
 ) -> None:
-    election_query = Election.objects.all()
+    election_query = Election.objects.using(database).all()
     if election_names is not None:
         election_query = election_query.filter(name__in=election_names)
     if not exact:
@@ -103,7 +105,7 @@ def export_election_properties(
 
         # we first compute the instance properties
         for instance_property in instance_property_mapping:
-            metadata_obj = ElectionMetadata.objects.get(short_name=instance_property)
+            metadata_obj = ElectionMetadata.objects.using(database).get(short_name=instance_property)
             if metadata_obj.applies_to_election(election_obj):
                 instance, profile = election_parser.get_parsed_election()
                 prop_value = instance_property_mapping[instance_property](instance)
@@ -112,7 +114,7 @@ def export_election_properties(
 
         # we now compute the profile properties
         for profile_property in profile_property_mapping:
-            metadata_obj = ElectionMetadata.objects.get(short_name=profile_property)
+            metadata_obj = ElectionMetadata.objects.using(database).get(short_name=profile_property)
             if metadata_obj.applies_to_election(election_obj):
                 instance, profile = election_parser.get_parsed_election()
                 prop_value = profile_property_mapping[profile_property](
@@ -168,14 +170,22 @@ class Command(BaseCommand):
             help="Use the databse for recovering an election (if present), or the file stored in the static folder ("
             "default).",
         )
+        parser.add_argument(
+            "--database",
+            type=str,
+            default="default",
+            help="name of the database to compute on",
+        )
 
     def handle(self, *args, **options):
+
         if options["file"]:
             export_election_properties(
                 options["file"],
                 election_names=options["election_names"],
                 exact=options["exact"],
                 use_db=options["usedb"],
+                database=options["database"]
             )
         else:
             compute_election_properties(
@@ -184,4 +194,5 @@ class Command(BaseCommand):
                 override=options["override"],
                 verbosity=options["verbosity"],
                 use_db=options["usedb"],
+                database=options["database"]
             )

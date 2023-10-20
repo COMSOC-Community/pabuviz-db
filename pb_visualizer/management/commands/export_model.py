@@ -13,6 +13,12 @@ class Command(BaseCommand):
         parser.add_argument(
             "-f", nargs="?", default="", type=str, help="the prefix for the file path"
         )
+        parser.add_argument(
+            "--database",
+            type=str,
+            default="default",
+            help="name of the database to export from",
+        )
 
     def handle(self, *args, **options):
         if not options["m"]:
@@ -27,5 +33,5 @@ class Command(BaseCommand):
                 writer = csv.writer(csv_file)
                 field_names = [field.name for field in model._meta.get_fields()]
                 writer.writerow(field_names)
-                for obj in model.objects.all():
+                for obj in model.objects.using(options["database"]).all():
                     writer.writerow([getattr(obj, field) for field in field_names])

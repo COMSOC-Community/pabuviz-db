@@ -6,21 +6,21 @@ from pb_visualizer.management.commands.utils import exists_in_database
 from pb_visualizer.models import Election, ElectionMetadata, ElectionDataProperty
 
 
-def import_election_properties(instance_file_path, profile_file_path, override):
+def import_election_properties(instance_file_path, profile_file_path, override, database="default"):
     for file_path in instance_file_path, profile_file_path:
         with open(file_path, "r") as f:
             reader = csv.DictReader(f, delimiter=";")
             for row in reader:
-                election_obj = Election.objects.get(name=row["election_name"])
-                metadata_obj = ElectionMetadata.objects.get(
+                election_obj = Election.objects.using(database).get(name=row["election_name"])
+                metadata_obj = ElectionMetadata.objects.using(database).get(
                     short_name=row["property_short_name"]
                 )
                 unique_filters = {"election": election_obj, "metadata": metadata_obj}
                 if override or not exists_in_database(
-                    ElectionDataProperty, **unique_filters
+                    ElectionDataProperty, database, **unique_filters
                 ):
                     print(f"Importing for {election_obj.name} and {metadata_obj.name}")
-                    ElectionDataProperty.objects.update_or_create(
+                    ElectionDataProperty.objects.using(database).update_or_create(
                         **unique_filters, defaults={"value": row["value"]}
                     )
 
@@ -59,11 +59,17 @@ class Command(BaseCommand):
             default=False,
             help="Override properties that were already computed.",
         )
+        parser.add_argument(
+            "--database",
+            type=str,
+            default="default",
+            help="name of the database to import to",
+        )
 
     def handle(self, *args, **options):
         if "instfile" not in options and "profile" not in options:
             print("You need to provide at least one of --instfile or --profile")
         else:
             import_election_properties(
-                options["instfile"], options["profile"], options["override"]
+                options["instfile"], options["profile"], options["override"], options["database"]
             )

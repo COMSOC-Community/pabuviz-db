@@ -11,14 +11,15 @@ from pb_visualizer.pabutools import rule_mapping
 
 
 def compute_rule_results(
-    election_names=None,
-    rule_list=None,
-    exact=False,
+    election_names: list[str]|None = None,
+    rule_list: list[str]|None = None,
+    exact: bool = False,
     override: bool = False,
     use_db: bool = False,
+    database: str = "default",
     verbosity=1,
 ):
-    election_query = Election.objects.all()
+    election_query = Election.objects.using(database).all()
     if election_names is not None:
         election_query = election_query.filter(name__in=election_names)
     if not exact:
@@ -40,16 +41,16 @@ def compute_rule_results(
             rules = rule_mapping(election_obj.budget)
             for rule in rules:
                 if rule_list is None or rule in rule_list:
-                    rule_obj = Rule.objects.filter(abbreviation=rule)
+                    rule_obj = Rule.objects.using(database).filter(abbreviation=rule)
                     if rule_obj.exists():
                         rule_obj = rule_obj.first()
                         if rule_obj.applies_to_election(election_obj):
                             unique_filters = {"election": election_obj, "rule": rule_obj}
                             if override or not exists_in_database(
-                                RuleResult, **unique_filters
+                                RuleResult, database, **unique_filters
                             ):
                                 print_if_verbose(f"\tComputing {rule}.", 2, verbosity)
-                                rule_result_obj, _ = RuleResult.objects.update_or_create(
+                                rule_result_obj, _ = RuleResult.objects.using(database).update_or_create(
                                     **unique_filters
                                 )
                                 instance, profile = election_parser.get_parsed_election()
@@ -58,7 +59,7 @@ def compute_rule_results(
                                 )
                                 rule_result_obj.selected_projects.set(
                                     [
-                                        Project.objects.get(
+                                        Project.objects.using(database).get(
                                             election=election_obj, project_id=project.name
                                         )
                                         for project in pabutools_result
@@ -68,12 +69,13 @@ def compute_rule_results(
 
 def export_rule_results(
     export_file: str,
-    election_names=None,
-    rule_list=None,
+    election_names: list[str]|None = None,
+    rule_list: list[str]|None = None,
     exact: bool = True,
     use_db: bool = False,
+    database: str = "default"
 ):
-    election_query = Election.objects.all()
+    election_query = Election.objects.using(database).all()
     if election_names is not None:
         election_query = election_query.filter(name__in=election_names)
     if not exact:
@@ -96,7 +98,7 @@ def export_rule_results(
             rules = rule_mapping(election_obj.budget)
             for rule in rules:
                 if rule_list is None or rule in rule_list:
-                    rule_obj = Rule.objects.filter(abbreviation=rule)
+                    rule_obj = Rule.objects.using(database).filter(abbreviation=rule)
                     if rule_obj.exists():
                         rule_obj = rule_obj.first()
                         if rule_obj.applies_to_election(election_obj):
@@ -166,6 +168,12 @@ class Command(BaseCommand):
             help="Use the databse for recovering an election (if present), or the file stored in the static folder ("
             "default).",
         )
+        parser.add_argument(
+            "--database",
+            type=str,
+            default="default",
+            help="name of the database to compute on",
+        )
 
     def handle(self, *args, **options):
         if options["file"]:
@@ -174,7 +182,8 @@ class Command(BaseCommand):
                 election_names=options["election_names"],
                 rule_list=options["rules"],
                 exact=options["exact"],
-                use_db=options["usedb"],
+                use_db=options["usedb"],                
+                database=options["database"]
             )
         else:
             compute_rule_results(
@@ -184,4 +193,5 @@ class Command(BaseCommand):
                 override=options["override"],
                 verbosity=options["verbosity"],
                 use_db=options["usedb"],
+                database=options["database"]
             )

@@ -1,12 +1,12 @@
 from django.core.management.base import BaseCommand
 
 from pb_visualizer.models import *
+from django.conf import settings
 
 
-def initialize_ballot_types():
+def initialize_ballot_types(database='default'):
     ballot_type_objs = {}
-
-    ballot_type_objs["approval"], _ = BallotType.objects.update_or_create(
+    ballot_type_objs["approval"], _ = BallotType.objects.db_manager(database).update_or_create(
         name="approval",
         defaults={
             "description": "voters simply select a set of projects (the ones they approve), potentially with additional constraints",
@@ -14,7 +14,7 @@ def initialize_ballot_types():
         },
     )
 
-    ballot_type_objs["ordinal"], _ = BallotType.objects.update_or_create(
+    ballot_type_objs["ordinal"], _ = BallotType.objects.db_manager(database).update_or_create(
         name="ordinal",
         defaults={
             "description": "voters rank in order of preferences some or all of the projects",
@@ -22,7 +22,7 @@ def initialize_ballot_types():
         },
     )
 
-    ballot_type_objs["cumulative"], _ = BallotType.objects.update_or_create(
+    ballot_type_objs["cumulative"], _ = BallotType.objects.db_manager(database).update_or_create(
         name="cumulative",
         defaults={
             "description": "voters distribute a given number of points between the projects",
@@ -30,7 +30,7 @@ def initialize_ballot_types():
         },
     )
 
-    ballot_type_objs["cardinal"], _ = BallotType.objects.update_or_create(
+    ballot_type_objs["cardinal"], _ = BallotType.objects.db_manager(database).update_or_create(
         name="cardinal",
         defaults={
             "description": "voters specify a score for each project",
@@ -41,10 +41,10 @@ def initialize_ballot_types():
     return ballot_type_objs
 
 
-def initialize_election_metadata(ballot_type_objs):
+def initialize_election_metadata(ballot_type_objs, database='default'):
     # election metadata for all vote types
     order_priority = 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="max_length",
         defaults={
             "name": "maximum allowed ballot length",
@@ -63,7 +63,7 @@ def initialize_election_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="min_length",
         defaults={
             "name": "minimum allowed ballot length",
@@ -83,7 +83,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     # election metadata for approval votes
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="max_sum_cost",
         defaults={
             "name": "maximum allowed ballot cost",
@@ -95,7 +95,7 @@ def initialize_election_metadata(ballot_type_objs):
     election_metadata_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="min_sum_cost",
         defaults={
             "name": "minimum allowed ballot cost",
@@ -108,7 +108,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     # election metadata for cumulative votes
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="max_sum_points",
         defaults={
             "name": "maximum allowed total points",
@@ -120,7 +120,7 @@ def initialize_election_metadata(ballot_type_objs):
     election_metadata_obj.applies_to.set([ballot_type_objs["cumulative"]])
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="min_sum_points",
         defaults={
             "name": "minimum allowed total points",
@@ -133,7 +133,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     # election metadata for cumulative and cardinal votes
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="max_points",
         defaults={
             "name": "maximum allowed points",
@@ -147,7 +147,7 @@ def initialize_election_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="min_points",
         defaults={
             "name": "minimum allowed points",
@@ -161,7 +161,7 @@ def initialize_election_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="default_score",
         defaults={
             "name": "default score",
@@ -176,7 +176,7 @@ def initialize_election_metadata(ballot_type_objs):
 
     # election analysis
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="sum_proj_cost",
         defaults={
             "name": "total cost of all projects",
@@ -195,7 +195,7 @@ def initialize_election_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="fund_scarc",
         defaults={
             "name": "funding scarcity",
@@ -214,7 +214,7 @@ def initialize_election_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="avg_proj_cost",
         defaults={
             "name": "average project cost",
@@ -233,7 +233,7 @@ def initialize_election_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="med_proj_cost",
         defaults={
             "name": "median project cost",
@@ -252,7 +252,7 @@ def initialize_election_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="sd_proj_cost",
         defaults={
             "name": "standard deviation of project costs",
@@ -271,7 +271,7 @@ def initialize_election_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="avg_ballot_len",
         defaults={
             "name": "average ballot length",
@@ -290,7 +290,7 @@ def initialize_election_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="med_ballot_len",
         defaults={
             "name": "median ballot length",
@@ -309,7 +309,7 @@ def initialize_election_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="avg_ballot_cost",
         defaults={
             "name": "average ballot cost",
@@ -328,7 +328,7 @@ def initialize_election_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="med_ballot_cost",
         defaults={
             "name": "median ballot cost",
@@ -347,7 +347,7 @@ def initialize_election_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="avg_app_score",
         defaults={
             "name": "average approval score",
@@ -359,7 +359,7 @@ def initialize_election_metadata(ballot_type_objs):
     election_metadata_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="med_app_score",
         defaults={
             "name": "median approval score",
@@ -371,7 +371,7 @@ def initialize_election_metadata(ballot_type_objs):
     election_metadata_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="avg_total_score",
         defaults={
             "name": "average total project score",
@@ -385,7 +385,7 @@ def initialize_election_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    election_metadata_obj, _ = ElectionMetadata.objects.update_or_create(
+    election_metadata_obj, _ = ElectionMetadata.objects.db_manager(database).update_or_create(
         short_name="med_total_score",
         defaults={
             "name": "median total project score",
@@ -399,10 +399,10 @@ def initialize_election_metadata(ballot_type_objs):
     )
 
 
-def initialize_rules(ballot_type_objs):
+def initialize_rules(ballot_type_objs, database='default'):
     #  rule families
     order_priority = 1
-    greedy_obj, _ = RuleFamily.objects.update_or_create(
+    greedy_obj, _ = RuleFamily.objects.db_manager(database).update_or_create(
         abbreviation="greedy",
         defaults={
             "name": "greedy satisfaction maximiser",
@@ -420,7 +420,7 @@ def initialize_rules(ballot_type_objs):
     )
 
     order_priority += 1
-    max_sat_obj, _ = RuleFamily.objects.update_or_create(
+    max_sat_obj, _ = RuleFamily.objects.db_manager(database).update_or_create(
         abbreviation="max_sat",
         defaults={
             "name": "satisfaction maximiser",
@@ -438,7 +438,7 @@ def initialize_rules(ballot_type_objs):
     )
 
     order_priority += 1
-    mes_obj, _ = RuleFamily.objects.update_or_create(
+    mes_obj, _ = RuleFamily.objects.db_manager(database).update_or_create(
         abbreviation="mes",
         defaults={
             "name": "methods of equal shares",
@@ -456,7 +456,7 @@ def initialize_rules(ballot_type_objs):
     )
 
     order_priority += 1
-    other_obj, _ = RuleFamily.objects.update_or_create(
+    other_obj, _ = RuleFamily.objects.db_manager(database).update_or_create(
         abbreviation="other",
         defaults={
             "name": "additional procedures",
@@ -475,7 +475,7 @@ def initialize_rules(ballot_type_objs):
 
     #  rule subfamilies
     order_priority += 1
-    mes_card_obj, _ = RuleFamily.objects.update_or_create(
+    mes_card_obj, _ = RuleFamily.objects.db_manager(database).update_or_create(
         abbreviation="mes_card",
         defaults={
             "name": "methods of equal shares (card)",
@@ -487,7 +487,7 @@ def initialize_rules(ballot_type_objs):
     mes_card_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    mes_cost_obj, _ = RuleFamily.objects.update_or_create(
+    mes_cost_obj, _ = RuleFamily.objects.db_manager(database).update_or_create(
         abbreviation="mes_cost",
         defaults={
             "name": "methods of equal shares (cost)",
@@ -500,7 +500,7 @@ def initialize_rules(ballot_type_objs):
 
 
     order_priority += 1
-    mes_effort_obj, _ = RuleFamily.objects.update_or_create(
+    mes_effort_obj, _ = RuleFamily.objects.db_manager(database).update_or_create(
         abbreviation="mes_effort",
         defaults={
             "name": "methods of equal shares (effort)",
@@ -513,7 +513,7 @@ def initialize_rules(ballot_type_objs):
 
 
     order_priority += 1
-    mes_sqrt_obj, _ = RuleFamily.objects.update_or_create(
+    mes_sqrt_obj, _ = RuleFamily.objects.db_manager(database).update_or_create(
         abbreviation="mes_sqrt",
         defaults={
             "name": "methods of equal shares (sqrt)",
@@ -528,7 +528,7 @@ def initialize_rules(ballot_type_objs):
     # rules
 
     # approval ballots
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="greedy_card",
         defaults={
             "name": "greedy (card)",
@@ -540,7 +540,7 @@ def initialize_rules(ballot_type_objs):
     rule_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="greedy_cost",
         defaults={
             "name": "greedy (cost)",
@@ -552,7 +552,7 @@ def initialize_rules(ballot_type_objs):
     rule_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="greedy_cc",
         defaults={
             "name": "greedy (Chamberlin-Courant)",
@@ -565,7 +565,7 @@ def initialize_rules(ballot_type_objs):
     rule_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="max_card",
         defaults={
             "name": "cardinality satisfaction maximiser",
@@ -578,7 +578,7 @@ def initialize_rules(ballot_type_objs):
     rule_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="max_cost",
         defaults={
             "name": "cost satisfaction maximiser",
@@ -597,7 +597,7 @@ def initialize_rules(ballot_type_objs):
         ("sqrt", "cost square root", mes_sqrt_obj),
     ]:
         order_priority += 1
-        rule_obj, _ = Rule.objects.update_or_create(
+        rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
             abbreviation=f"mes_{mes_sat}",
             defaults={
                 "name": f"equal shares ({mes_sat})",
@@ -610,7 +610,7 @@ def initialize_rules(ballot_type_objs):
         rule_obj.applies_to.set([ballot_type_objs["approval"]])
 
         order_priority += 1
-        rule_obj, _ = Rule.objects.update_or_create(
+        rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
             abbreviation=f"mes_{mes_sat}_greedy",
             defaults={
                 "name": f"equal shares ({mes_sat}, greedy)",
@@ -623,7 +623,7 @@ def initialize_rules(ballot_type_objs):
         rule_obj.applies_to.set([ballot_type_objs["approval"]])
 
         order_priority += 1
-        rule_obj, _ = Rule.objects.update_or_create(
+        rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
             abbreviation=f"mes_{mes_sat}_uncompleted",
             defaults={
                 "name": f"equal shares ({mes_sat}no completion)",
@@ -635,7 +635,7 @@ def initialize_rules(ballot_type_objs):
         rule_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="seq_phragmen",
         defaults={
             "name": "sequential Phragmen",
@@ -648,7 +648,7 @@ def initialize_rules(ballot_type_objs):
 
     # cardinal
     order_priority = 1
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="greedy_cardbal",
         defaults={
             "name": "greedy",
@@ -662,7 +662,7 @@ def initialize_rules(ballot_type_objs):
     )
 
     order_priority += 1
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="greedy_cardbal_cc",
         defaults={
             "name": "greedy (Chamberlin-Courant)",
@@ -677,7 +677,7 @@ def initialize_rules(ballot_type_objs):
     )
 
     order_priority += 1
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="max_add_card",
         defaults={
             "name": "additive cardinality satisfaction maximiser",
@@ -695,7 +695,7 @@ def initialize_rules(ballot_type_objs):
     )
 
     order_priority += 1
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="mes_cardbal",
         defaults={
             "name": "equal shares",
@@ -713,7 +713,7 @@ def initialize_rules(ballot_type_objs):
     )
 
     order_priority += 1
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="mes_cardbal_uncompleted",
         defaults={
             "name": "equal shares (no completion)",
@@ -730,7 +730,7 @@ def initialize_rules(ballot_type_objs):
     )
 
     order_priority += 1
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="mes_cardbal_greedy",
         defaults={
             "name": "equal shares (greedy)",
@@ -749,7 +749,7 @@ def initialize_rules(ballot_type_objs):
 
     # ordinal
     order_priority += 1
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="greedy_borda",
         defaults={
             "name": "greedy Borda",
@@ -761,7 +761,7 @@ def initialize_rules(ballot_type_objs):
     rule_obj.applies_to.set([ballot_type_objs["ordinal"]])
 
     order_priority += 1
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="max_borda",
         defaults={
             "name": "Borda satisfaction maximiser",
@@ -774,7 +774,7 @@ def initialize_rules(ballot_type_objs):
     rule_obj.applies_to.set([ballot_type_objs["ordinal"]])
 
     order_priority += 1
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="mes_borda",
         defaults={
             "name": "equal shares (Borda)",
@@ -787,7 +787,7 @@ def initialize_rules(ballot_type_objs):
     rule_obj.applies_to.set([ballot_type_objs["ordinal"]])
 
     order_priority += 1
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="mes_borda_uncompleted",
         defaults={
             "name": "equal shares (Borda, no completion)",
@@ -799,7 +799,7 @@ def initialize_rules(ballot_type_objs):
     rule_obj.applies_to.set([ballot_type_objs["ordinal"]])
 
     order_priority += 1
-    rule_obj, _ = Rule.objects.update_or_create(
+    rule_obj, _ = Rule.objects.db_manager(database).update_or_create(
         abbreviation="mes_borda_greedy",
         defaults={
             "name": "equal shares (Borda, greedy)",
@@ -811,9 +811,9 @@ def initialize_rules(ballot_type_objs):
     rule_obj.applies_to.set([ballot_type_objs["ordinal"]])
 
 
-def initialize_rule_result_metadata(ballot_type_objs):
+def initialize_rule_result_metadata(ballot_type_objs, database='default'):
     order_priority = 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="avg_card_sat",
         defaults={
             "name": "average cardinality satisfaction",
@@ -826,7 +826,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="avg_nrmcard_sat",
         defaults={
             "name": "average cardinality satisfaction (normalized)",
@@ -840,7 +840,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="avg_relcard_sat",
         defaults={
             "name": "average relative cardinality satisfaction",
@@ -854,7 +854,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="avg_cost_sat",
         defaults={
             "name": "average cost satisfaction",
@@ -867,7 +867,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="avg_nrmcost_sat",
         defaults={
             "name": "average cost satisfaction (normalized)",
@@ -881,7 +881,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="avg_relcost_sat",
         defaults={
             "name": "average relative cost satisfaction",
@@ -895,7 +895,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="avg_sat_cardbal",
         defaults={
             "name": "average satisfaction",
@@ -911,7 +911,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="avg_relsat_cardbal",
         defaults={
             "name": "average relative satisfaction",
@@ -927,7 +927,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="avg_borda_sat",
         defaults={
             "name": "average Borda satisfaction",
@@ -941,7 +941,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj.applies_to.set([ballot_type_objs["ordinal"]])
 
     order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="category_prop",
         defaults={
             "name": "category proportionality",
@@ -955,7 +955,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="inverted_cost_gini",
         defaults={
             "name": "inverted cost Gini",
@@ -969,7 +969,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj.applies_to.set([ballot_type_objs["approval"]])
 
     order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="inverted_cardbal_gini",
         defaults={
             "name": "inverted cost Gini",
@@ -985,7 +985,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="inverted_borda_gini",
         defaults={
             "name": "inverted Borda Gini",
@@ -999,7 +999,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj.applies_to.set([ballot_type_objs["ordinal"]])
 
     order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="prop_pos_sat",
         defaults={
             "name": "proportion of voters with positive satisfaction",
@@ -1018,7 +1018,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="prop_pos_sat_ord",
         defaults={
             "name": "proportion of voters with positive Borda satisfaction",
@@ -1032,7 +1032,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj.applies_to.set([ballot_type_objs["ordinal"]])
 
     order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="med_select_cost",
         defaults={
             "name": "median selected cost",
@@ -1052,7 +1052,7 @@ def initialize_rule_result_metadata(ballot_type_objs):
     )
 
     order_priority += 1
-    metadata_obj, _ = RuleResultMetadata.objects.update_or_create(
+    metadata_obj, _ = RuleResultMetadata.objects.db_manager(database).update_or_create(
         short_name="agg_nrmcost_sat",
         defaults={
             "name": "aggregated normalized cost satisfaction distribution",
@@ -1065,15 +1065,24 @@ def initialize_rule_result_metadata(ballot_type_objs):
     metadata_obj.applies_to.set([ballot_type_objs["approval"]])
 
 
-def initialize_db():
-    ballot_type_objs = initialize_ballot_types()
-    initialize_election_metadata(ballot_type_objs)
-    initialize_rules(ballot_type_objs)
-    initialize_rule_result_metadata(ballot_type_objs)
+def initialize_db(database = None):
+    databases = [database] if database else list(settings.DATABASES.keys())
+
+    for d in databases:
+        ballot_type_objs = initialize_ballot_types(d)
+        initialize_election_metadata(ballot_type_objs, d)
+        initialize_rules(ballot_type_objs, d)
+        initialize_rule_result_metadata(ballot_type_objs, d)
 
 
 class Command(BaseCommand):
     help = "Initializes the database, to be run once at the beginning"
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--database",
+            type=str,
+            help="name of the database to initialize, if not provided initializes all of them",
+        )
     def handle(self, *args, **options):
-        initialize_db()
+        initialize_db(options['database'])

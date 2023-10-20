@@ -12,16 +12,16 @@ from pb_visualizer.models import (
 )
 
 
-def import_rule_results_properties(file_path, override):
+def import_rule_results_properties(file_path, override, database="default"):
     with open(file_path, "r") as f:
         reader = csv.DictReader(f, delimiter=";")
         for row in reader:
-            election_obj = Election.objects.get(name=row["election_name"])
-            rule_obj = Rule.objects.get(abbreviation=row["rule_abbreviation"])
-            rule_result_object = RuleResult.objects.get(
+            election_obj = Election.objects.using(database).get(name=row["election_name"])
+            rule_obj = Rule.objects.using(database).get(abbreviation=row["rule_abbreviation"])
+            rule_result_object = RuleResult.objects.using(database).get(
                 election=election_obj, rule=rule_obj
             )
-            metadata_obj = RuleResultMetadata.objects.get(
+            metadata_obj = RuleResultMetadata.objects.using(database).get(
                 short_name=row["property_short_name"]
             )
             unique_filters = {
@@ -29,12 +29,12 @@ def import_rule_results_properties(file_path, override):
                 "metadata": metadata_obj,
             }
             if override or not exists_in_database(
-                RuleResultDataProperty, **unique_filters
+                RuleResultDataProperty, database, **unique_filters
             ):
                 print(
                     f"Importing for {election_obj.name} -- {rule_obj.abbreviation} and {metadata_obj.name}"
                 )
-                RuleResultDataProperty.objects.update_or_create(
+                RuleResultDataProperty.objects.using(database).update_or_create(
                     **unique_filters, defaults={"value": row["value"]}
                 )
 
@@ -58,6 +58,12 @@ class Command(BaseCommand):
             default=False,
             help="Override properties that were already computed.",
         )
+        parser.add_argument(
+            "--database",
+            type=str,
+            default="default",
+            help="name of the database to import to",
+        )
 
     def handle(self, *args, **options):
-        import_rule_results_properties(options["file"], options["override"])
+        import_rule_results_properties(options["file"], options["override"], options["database"])

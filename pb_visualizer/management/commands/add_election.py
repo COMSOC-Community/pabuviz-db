@@ -24,18 +24,9 @@ ballot_type_mapping = {
     "cardinal": ["scoring", "cardinal"],
 }
 
-ballot_type_objs = {
-    ballot_type: BallotType.objects.get(name=ballot_type)
-    for ballot_type in ballot_type_mapping
-}
-
 rule_abbreviation_mapping = {
     "greedy_cost": ["greedy_cost", "greedy"],
     "mes_cost": ["mes", "equalshares/add1"],
-}
-
-rule_objs = {
-    rule: Rule.objects.get(abbreviation=rule) for rule in rule_abbreviation_mapping
 }
 
 gender_mapping = {
@@ -83,6 +74,7 @@ def collect_election_info(
 ):
     election_defaults = {}
     election_meta_data = {}
+    election_foreign_keys = {}
     # we iterate through the keys of the meta data o f the pabutools election object and translate them for our Election object
     election_info = instance_pabutools.meta
 
@@ -134,7 +126,7 @@ def collect_election_info(
                     election_info["vote_type"].lower()
                     in ballot_type_mapping[ballot_type]
                 ):
-                    election_defaults["ballot_type"] = ballot_type_objs[ballot_type]
+                    election_foreign_keys["ballot_type"] = ballot_type
                     break
             else:
                 raise Exception(
@@ -154,7 +146,7 @@ def collect_election_info(
         elif key == "rule":
             for rule in rule_abbreviation_mapping:
                 if election_info[key].lower() in rule_abbreviation_mapping[rule]:
-                    election_defaults[key] = rule_objs[rule]
+                    election_foreign_keys[key] = rule
                     break
             else:
                 raise Exception(
@@ -203,12 +195,13 @@ def collect_election_info(
             and not field.blank
             and not field.has_default()
             and field.name not in election_defaults
+            and field.name not in election_foreign_keys
         ):
             # these fields we will add manually later
             if field.name not in ["modification_date"]:
                 raise_missing_data_exception("election", field.name)
 
-    if election_defaults["ballot_type"].name == "cumulative":
+    if election_foreign_keys["ballot_type"] == "cumulative":
         if "max_sum_points" not in election_meta_data:
             raise_missing_data_exception(
                 "cumulative election",
@@ -216,7 +209,7 @@ def collect_election_info(
                 "If there is no upper limit for the number of points every voter can distribute, please use the 'scoring'/'cardinal' vote type.",
             )
 
-    return {"defaults": election_defaults, "meta_data": election_meta_data}
+    return {"defaults": election_defaults, "foreign_keys": election_foreign_keys, "meta_data": election_meta_data}
 
 
 def collect_projects_info(instance_pabutools: Instance, verbosity: int = 1):
@@ -363,7 +356,7 @@ def collect_voters_info(
     }
 
 
-def add_election(file_path: str, override: bool, verbosity: int = 1):
+def add_election(file_path: str, override: bool, database: str = 'default', verbosity: int = 1, ):
     # We read and parse the file
     # election_info, projects_info, voters_info = parse_pb_file(file_path)
     if verbosity > 1:
@@ -395,6 +388,11 @@ def add_election(file_path: str, override: bool, verbosity: int = 1):
     if verbosity > 1:
         print("collecting references...")
 
+    ballot_type_obj = BallotType.objects.using(database).get(name=election_info["foreign_keys"]["ballot_type"])
+    election_info["defaults"]["ballot_type"] = ballot_type_obj
+    rule_obj = Rule.objects.using(database).get(abbreviation=election_info["foreign_keys"]["rule"])
+    election_info["defaults"]["rule"] = rule_obj
+
     # create election object
     election_query = Election.objects.filter(name=election_info["defaults"]["name"])
     if election_query.exists():
@@ -407,16 +405,16 @@ def add_election(file_path: str, override: bool, verbosity: int = 1):
 
     if verbosity > 1:
         print("creating election object {}".format(election_info["defaults"]["name"]))
-    election_obj = Election.objects.create(**election_info["defaults"])
+    election_obj = Election.objects.using(database).create(**election_info["defaults"])
 
     # create election data properties
     for metadata in election_info["meta_data"]:
-        election_metadata_obj = ElectionMetadata.objects.get(short_name=metadata)
+        election_metadata_obj = ElectionMetadata.objects.using(database).get(short_name=metadata)
         if (
             election_info["defaults"]["ballot_type"]
             in election_metadata_obj.applies_to.all()
         ):
-            ElectionDataProperty.objects.create(
+            ElectionDataProperty.objects.using(database).create(
                 election=election_obj,
                 metadata=election_metadata_obj,
                 value=election_info["meta_data"][metadata],
@@ -440,17 +438,17 @@ def add_election(file_path: str, override: bool, verbosity: int = 1):
     )
 
     for category in projects_info["categories_set"]:
-        categories_obj[category] = Category.objects.create(
+        categories_obj[category] = Category.objects.using(database).create(
             election=election_obj, name=category
         )
     for target in projects_info["targets_set"]:
-        targets_obj[target] = Target.objects.create(election=election_obj, name=target)
+        targets_obj[target] = Target.objects.using(database).create(election=election_obj, name=target)
     for voting_method in voters_info["voting_methods_set"]:
-        voting_methods_obj[voting_method] = VotingMethod.objects.create(
+        voting_methods_obj[voting_method] = VotingMethod.objects.using(database).create(
             election=election_obj, name=voting_method
         )
     for neighborhood in voters_info["neighborhoods_set"]:
-        neighborhoods_obj[neighborhood] = Neighborhood.objects.create(
+        neighborhoods_obj[neighborhood] = Neighborhood.objects.using(database).create(
             election=election_obj, name=neighborhood
         )
     if verbosity > 1:
@@ -458,7 +456,7 @@ def add_election(file_path: str, override: bool, verbosity: int = 1):
     # create project objects
     for index, project_id in enumerate(projects_info["projects_defaults"]):
         # if verbosity > 1: print(str(index) + "/" + str(len(projects_defaults)), end="\r")
-        project_obj = Project.objects.create(
+        project_obj = Project.objects.using(database).create(
             election=election_obj, **projects_info["projects_defaults"][project_id]
         )
 
@@ -506,7 +504,7 @@ def add_election(file_path: str, override: bool, verbosity: int = 1):
                 voters_info["voters_foreign_keys"][voter_id]["neighborhood"]
             ]
 
-        voter_obj = Voter.objects.create(
+        voter_obj = Voter.objects.using(database).create(
             election=election_obj, **voters_info["voters_defaults"][voter_id]
         )
         voters_objs.append(voter_obj)
@@ -528,7 +526,7 @@ def add_election(file_path: str, override: bool, verbosity: int = 1):
             )
     if verbosity > 1:
         print("~50 %  ", end="\r")
-    PreferenceInfo.objects.bulk_create(pref_info_objs)
+    PreferenceInfo.objects.using(database).bulk_create(pref_info_objs)
 
     # Finally, move the file to the static folder
     data_dir_path = os.path.join(
@@ -563,6 +561,12 @@ class Command(BaseCommand):
             action="store_true",
             help="deletes the files after adding the election",
         )
+        parser.add_argument(
+            "--database",
+            type=str,
+            default="default",
+            help="name of the database to save the election in",
+        )
 
     def handle(self, *args, **options):
         if not options["d"] and not options["f"]:
@@ -594,7 +598,7 @@ class Command(BaseCommand):
 
         try:
             # Initializing the log
-            new_log_num = Log.objects.filter(log_type="add_dataset").aggregate(
+            new_log_num = Log.objects.using(options["database"]).filter(log_type="add_dataset").aggregate(
                 Max("log_num")
             )["log_num__max"]
             if new_log_num is None:
@@ -646,15 +650,18 @@ class Command(BaseCommand):
                     file_name = os.path.basename(file_path)
                     if options["verbosity"] > 0:
                         print(
-                            "Adding dataset {} ({}/{})".format(
-                                str(file_name), str(i + 1), str(len(options["f"]))
+                            "Adding dataset {} ({}/{}) to database {}".format(
+                                str(file_name), str(i + 1), str(len(options["f"])), options["database"]
                             )
                         )
                     log.append("\n\t<li>Dataset " + str(file_name) + "... ")
                     try:
                         # Actually adding the election
                         add_election(
-                            file_path, options["override"], options["verbosity"]
+                            file_path,
+                            options["override"],
+                            options["database"],
+                            options["verbosity"],
                         )
                         if options["rm"]:
                             os.remove(file_path)
@@ -692,7 +699,7 @@ class Command(BaseCommand):
             print(e)
         finally:
             # In any cases, we save the log
-            Log.objects.create(
+            Log.objects.using(options["database"]).create(
                 log="".join(log),
                 log_type="add_dataset",
                 log_num=new_log_num,

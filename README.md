@@ -21,6 +21,9 @@ ALLOWED_HOSTS = ["url.where.hosted.org"]
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
+    },
+    'user_submitted': {
+        'ENGINE': 'django.db.backends.mysql',
     }
 }
 
@@ -40,5 +43,7 @@ python manage.py makemigrations
 python manage.py migrate
 python manage.py initialize_db
 python manage.py add_election -d <path to .pb file directory> -v 3
-python manage.py compute_properties -v 3
+python manage.py compute_election_properties -v 3
+python manage.py compute_rule_results -v 3
+python manage.py compute_rule_result_properties -v 3
 ```

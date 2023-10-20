@@ -8,7 +8,7 @@ import numpy as np
 # Create your tests here.
 class TestApi(TestCase):
     def setUp(self):
-        initialize_db()
+        initialize_db(database="default")
 
     def test_election_filter(self):
         greedy_obj = Rule.objects.get(abbreviation="greedy_cost")

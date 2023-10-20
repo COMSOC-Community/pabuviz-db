@@ -17,8 +17,8 @@ def print_if_verbose(string, required_verbosity=1, verbosity=1.0, persist=False)
         print(string.ljust(80))
 
 
-def exists_in_database(model_class: type[Model], **filters):
-    query = model_class.objects.filter(**filters)
+def exists_in_database(model_class: type[Model], database="default", **filters):
+    query = model_class.objects.using(database).filter(**filters)
     return query.exists()
 
 

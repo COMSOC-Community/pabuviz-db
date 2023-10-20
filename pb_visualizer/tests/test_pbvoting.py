@@ -8,7 +8,7 @@ import os
 
 class BuildElectionTestCase(TestCase):
     def setUp(self):
-        initialize_db()
+        initialize_db(database="default")
         add_election(
             "pb_visualizer/tests/test_files/test_file_approval.pb", None, verbosity=0
         )

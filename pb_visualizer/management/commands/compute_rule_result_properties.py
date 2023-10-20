@@ -16,14 +16,15 @@ from pb_visualizer.pabutools import (
 
 
 def compute_rule_result_properties(
-    election_names=None,
+    election_names: list[str]|None = None,
     rule_property_list: Iterable[str] | None = None,
     exact=False,
     override: bool = False,
     use_db: bool = False,
+    database: str = "default",
     verbosity=1,
 ):
-    election_query = Election.objects.all()
+    election_query = Election.objects.using(database).all()
     if election_names is not None:
         election_query = election_query.filter(name__in=election_names)
     if not exact:
@@ -31,7 +32,7 @@ def compute_rule_result_properties(
     n_elections = len(election_query)
     for index, election_obj in enumerate(election_query):
         print_if_verbose(
-            f"Computing rule results of election {index + 1}/{n_elections}: {election_obj.name}"
+            f"Computing rule result properties of election {index + 1}/{n_elections}: {election_obj.name}"
             f"{election_obj.num_votes} voters and {election_obj.num_projects} projects -- {election_obj.ballot_type.name}",
             1,
             verbosity,
@@ -40,7 +41,7 @@ def compute_rule_result_properties(
         election_parser = LazyElectionParser(election_obj, use_db, 10000)
         election_obj = election_parser.get_election_obj()
 
-        for rule_result_object in RuleResult.objects.filter(election=election_obj):
+        for rule_result_object in RuleResult.objects.using(database).filter(election=election_obj):
             print_if_verbose(
                 "Computing properties for {} results.".format(
                     rule_result_object.rule.abbreviation
@@ -55,35 +56,38 @@ def compute_rule_result_properties(
 
             for property, prop_func in rule_result_property_mapping.items():
                 if rule_property_list == None or property in rule_property_list:
-                    metadata_obj = RuleResultMetadata.objects.get(short_name=property)
+                    metadata_obj = RuleResultMetadata.objects.using(database).get(short_name=property)
                     if metadata_obj.applies_to_election(election_obj):
                         unique_filters = {
                             "rule_result": rule_result_object,
                             "metadata": metadata_obj,
                         }
                         if override or not exists_in_database(
-                            RuleResultDataProperty, **unique_filters
+                            RuleResultDataProperty, database, **unique_filters
                         ):
                             print_if_verbose(
                                 "Computing {}.".format(property), 3, verbosity
                             )
                             instance, profile = election_parser.get_parsed_election()
-                            value = prop_func(instance, profile, budget_allocation)
-                            RuleResultDataProperty.objects.update_or_create(
-                                **unique_filters,
-                                defaults={"value": str(value)},
-                            )
+                            try:
+                                value = prop_func(instance, profile, budget_allocation)
+                                RuleResultDataProperty.objects.using(database).update_or_create(
+                                    **unique_filters,
+                                    defaults={"value": str(value)},
+                                )
+                            except Exception as e:
+                                print(e)
 
 
 def export_rule_result_properties(
     export_file: str,
-    election_names=None,
+    election_names: list[str]|None = None,
     rule_property_list: Iterable[str] | None = None,
     exact=False,
     use_db: bool = False,
-    verbosity=1,
+    database: str = "default",
 ):
-    election_query = Election.objects.all()
+    election_query = Election.objects.using(database).all()
     if election_names is not None:
         election_query = election_query.filter(name__in=election_names)
     if not exact:
@@ -102,7 +106,7 @@ def export_rule_result_properties(
         election_parser = LazyElectionParser(election_obj, use_db, 10000)
         election_obj = election_parser.get_election_obj()
 
-        for rule_result_object in RuleResult.objects.filter(election=election_obj):
+        for rule_result_object in RuleResult.objects.using(database).filter(election=election_obj):
             print(f"\tComputing properties for the result of {rule_result_object.rule.abbreviation}")
             budget_allocation = [
                 project_object_to_pabutools(project)
@@ -111,7 +115,7 @@ def export_rule_result_properties(
 
             for property, prop_func in rule_result_property_mapping.items():
                 if rule_property_list == None or property in rule_property_list:
-                    metadata_obj = RuleResultMetadata.objects.get(short_name=property)
+                    metadata_obj = RuleResultMetadata.objects.using(database).get(short_name=property)
                     if metadata_obj.applies_to_election(election_obj):
                         print(f"\t\tProperty: {property}")
                         instance, profile = election_parser.get_parsed_election()
@@ -176,6 +180,12 @@ class Command(BaseCommand):
             help="Use the databse for recovering an election (if present), or the file stored in the static folder ("
             "default).",
         )
+        parser.add_argument(
+            "--database",
+            type=str,
+            default="default",
+            help="name of the database to compute on",
+        )
 
     def handle(self, *args, **options):
         if options["file"]:
@@ -185,6 +195,7 @@ class Command(BaseCommand):
                 rule_property_list=options["rule_properties"],
                 exact=options["exact"],
                 use_db=options["usedb"],
+                database=options["database"]
             )
         else:
             compute_rule_result_properties(
@@ -194,4 +205,5 @@ class Command(BaseCommand):
                 override=options["override"],
                 verbosity=options["verbosity"],
                 use_db=options["usedb"],
+                database=options["database"]
             )

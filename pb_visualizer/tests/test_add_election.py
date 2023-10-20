@@ -8,7 +8,7 @@ import os
 # Create your tests here.
 class AddElectionTestCase(TestCase):
     def setUp(self):
-        initialize_db()
+        initialize_db(database="default")
 
     def test_integrity(self):
         """test integrity of election even if pb file has integrity errors"""
