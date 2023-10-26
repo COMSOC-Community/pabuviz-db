@@ -356,7 +356,7 @@ def collect_voters_info(
     }
 
 
-def add_election(file_path: str, override: bool, database: str = 'default', verbosity: int = 1, ):
+def add_election(file_path: str, override: bool, database: str = 'default', verbosity: int = 1) -> str:
     # We read and parse the file
     # election_info, projects_info, voters_info = parse_pb_file(file_path)
     if verbosity > 1:
@@ -394,7 +394,7 @@ def add_election(file_path: str, override: bool, database: str = 'default', verb
     election_info["defaults"]["rule"] = rule_obj
 
     # create election object
-    election_query = Election.objects.filter(name=election_info["defaults"]["name"])
+    election_query = Election.objects.using(database).filter(name=election_info["defaults"]["name"])
     if election_query.exists():
         if override:
             if verbosity > 1:
@@ -535,6 +535,7 @@ def add_election(file_path: str, override: bool, database: str = 'default', verb
     os.makedirs(data_dir_path, exist_ok=True)
     shutil.copyfile(file_path, os.path.join(data_dir_path, os.path.basename(file_path)))
 
+    return election_obj.name
 
 class Command(BaseCommand):
     help = "Add .pb file to database"

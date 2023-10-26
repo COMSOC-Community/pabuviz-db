@@ -32,4 +32,5 @@ urlpatterns = [
     path("api/rule_voter_satisfaction_histogram/", views.voter_satisfaction_histogram),
     path("api/election_property_histogram/", views.election_property_histogram),
     path("api/category_proportions/", views.rule_category_proportions),
+    path("api/submit_pb_file/", views.submit_pb_file),
 ]

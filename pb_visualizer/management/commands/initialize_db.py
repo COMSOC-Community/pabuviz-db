@@ -1065,14 +1065,11 @@ def initialize_rule_result_metadata(ballot_type_objs, database='default'):
     metadata_obj.applies_to.set([ballot_type_objs["approval"]])
 
 
-def initialize_db(database = None):
-    databases = [database] if database else list(settings.DATABASES.keys())
-
-    for d in databases:
-        ballot_type_objs = initialize_ballot_types(d)
-        initialize_election_metadata(ballot_type_objs, d)
-        initialize_rules(ballot_type_objs, d)
-        initialize_rule_result_metadata(ballot_type_objs, d)
+def initialize_db(database = "default"):
+    ballot_type_objs = initialize_ballot_types(database)
+    initialize_election_metadata(ballot_type_objs, database)
+    initialize_rules(ballot_type_objs, database)
+    initialize_rule_result_metadata(ballot_type_objs, database)
 
 
 class Command(BaseCommand):
@@ -1082,7 +1079,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--database",
             type=str,
-            help="name of the database to initialize, if not provided initializes all of them",
+            help="name of the database to initialize",
         )
     def handle(self, *args, **options):
         initialize_db(options['database'])

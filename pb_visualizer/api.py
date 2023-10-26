@@ -1,7 +1,9 @@
 from collections.abc import Iterable
 import datetime
 import json
-from time import sleep
+from django.core.files.storage import FileSystemStorage
+from pb_visualizer.management.commands.add_election import add_election
+from pb_visualizer.management.commands.compute_election_properties import compute_election_properties
 
 
 from .models import Rule
@@ -24,6 +26,9 @@ from django.db.models.functions import Cast, Floor, Ln
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import status
 
+import logging
+
+logger = logging.getLogger('django')
 
 class ApiExcepetion(PermissionDenied):
     status_code = status.HTTP_400_BAD_REQUEST
@@ -54,23 +59,27 @@ def _get_type_from_model_field(field):
         return "not supported"
 
 
-def get_ballot_type_list() -> list[dict]:
-    ballot_type_query = BallotType.objects.all()
+def get_ballot_type_list(database: str = "default") -> list[dict]:
+    logger.info("received request")
+    ballot_type_query = BallotType.objects.using(database).all()
+    logger.info("ballot_type_query defined")
     ballot_type_query = ballot_type_query.annotate(
         num_elections=Count("elections")
     ).order_by("order_priority")
+    logger.info("ballot_type_query annotated")
     ballot_type_query = ballot_type_query.filter(num_elections__gt=0)
+    logger.info("ballot_type_query filtered")
     ballot_type_serializer = BallotTypeSerializer(ballot_type_query, many=True)
-
+    logger.info("ballot_type_query serialized")
     return {"data": ballot_type_serializer.data}
 
 
-def get_election_list(filters: dict) -> list[dict]:
-    election_query_set = filter_elections(**filters)
+def get_election_list(filters: dict, database: str = "default") -> list[dict]:
+    election_query_set = filter_elections(**filters, database=database)
     election_serializer = ElectionSerializer(election_query_set, many=True)
 
     ballot_type_query = (
-        BallotType.objects.all().filter(elections__in=election_query_set).distinct()
+        BallotType.objects.using(database).all().filter(elections__in=election_query_set).distinct()
     )
     ballot_type_serializer = BallotTypeSerializer(ballot_type_query, many=True)
 
@@ -81,13 +90,18 @@ def get_election_list(filters: dict) -> list[dict]:
 
 
 def get_election_details(
-    property_short_names, ballot_type: str, filters: dict
+    property_short_names,
+    ballot_type: str,
+    filters: dict,
+    database: str = "default"
 ) -> list[dict]:
-    election_query_set = filter_elections(**filters)
+    election_query_set = filter_elections(**filters, database=database)
     election_details_collection = {}
 
     properties = get_filterable_election_property_list(
-        property_short_names=property_short_names, ballot_type=ballot_type
+        property_short_names=property_short_names,
+        ballot_type=ballot_type,
+        database=database
     )["data"]
 
     for election_obj in election_query_set:
@@ -103,7 +117,7 @@ def get_election_details(
                 ]
 
         # then we get all the properties that are ElectionMetadata
-        data_props_query = ElectionDataProperty.objects.all().filter(
+        data_props_query = ElectionDataProperty.objects.using(database).all().filter(
             election=election_obj,
             metadata__short_name__in=[p["short_name"] for p in properties],
         )
@@ -115,16 +129,16 @@ def get_election_details(
     return {"data": election_details_collection, "metadata": properties}
 
 
-def get_project_list(election_name: int) -> list[dict]:
+def get_project_list(election_name: int, database: str = "default") -> list[dict]:
     if election_name == None:
         raise ApiExcepetion(
             "Please provide an election name with your request.",
             status_code=status.HTTP_400_BAD_REQUEST,
         )
-    project_query_set = Project.objects.all().filter(election__name=election_name)
+    project_query_set = Project.objects.using(database).all().filter(election__name=election_name)
     project_serializer = ProjectSerializer(project_query_set, many=True)
 
-    rule_query_set = Rule.objects.all().filter(
+    rule_query_set = Rule.objects.using(database).all().filter(
         rule_results__election__name=election_name
     )
     rule_serializer = RuleSerializer(rule_query_set, many=True)
@@ -135,8 +149,8 @@ def get_project_list(election_name: int) -> list[dict]:
     }
 
 
-def get_rule_family_list() -> list[dict]:
-    rule_family_query = RuleFamily.objects.all().filter(parent_family__isnull=True)
+def get_rule_family_list(database: str = "default") -> list[dict]:
+    rule_family_query = RuleFamily.objects.using(database).all().filter(parent_family__isnull=True)
     rule_family_serializer = RuleFamilyFullSerializer(rule_family_query, many=True)
     
     return {"data": rule_family_serializer.data}
@@ -144,8 +158,9 @@ def get_rule_family_list() -> list[dict]:
 
 def get_rule_result_property_list(
     property_short_names: Iterable[str] = None,
+    database: str = "default"
 ) -> list[dict]:
-    query = RuleResultMetadata.objects.all()
+    query = RuleResultMetadata.objects.using(database).all()
     if property_short_names != None:
         query = query.filter(short_name__in=property_short_names)
 
@@ -154,7 +169,9 @@ def get_rule_result_property_list(
 
 
 def get_filterable_election_property_list(
-    property_short_names: Iterable[str], ballot_type: str = None
+    property_short_names: Iterable[str],
+    ballot_type: str = None,
+    database: str = "default"
 ) -> list[dict]:
     def field_to_property_dict(field_name):
         property_field = Election._meta.get_field(field_name)
@@ -167,7 +184,7 @@ def get_filterable_election_property_list(
         }
 
         if property_dict["inner_type"] == "reference":
-            related_model_query_set = property_field.related_model.objects.all()
+            related_model_query_set = property_field.related_model.objects.using(database).all()
             related_model_query_set = related_model_query_set.annotate(
                 num_elections=Count(property_field.remote_field.related_name)
             ).filter(num_elections__gt=0)
@@ -188,7 +205,7 @@ def get_filterable_election_property_list(
         if property_short_names == None or field_name in property_short_names:
             properties.append(field_to_property_dict(field_name))
 
-    property_query = ElectionMetadata.objects.all()
+    property_query = ElectionMetadata.objects.using(database).all()
     if property_short_names != None:
         property_query = property_query.filter(short_name__in=property_short_names)
     if ballot_type != None:
@@ -206,14 +223,17 @@ def get_rule_result_average_data_properties(
     rule_abbr_list: Iterable[str],
     property_short_names: Iterable[str],
     election_filters: dict = {},
+    database: str = "default"
 ) -> dict[str, dict[str, float]]:
-    election_query_set = filter_elections(**election_filters)
+    
+    election_query_set = filter_elections(**election_filters, database=database)
     election_query_set = filter_elections_by_rule_properties(
         election_query_set,
         rule_abbr_list=rule_abbr_list,
         property_short_names=property_short_names,
+        database=database
     )
-    rule_result_data_property_query_set = RuleResultDataProperty.objects.all().filter(
+    rule_result_data_property_query_set = RuleResultDataProperty.objects.using(database).all().filter(
         rule_result__election__in=election_query_set
     )
 
@@ -221,7 +241,7 @@ def get_rule_result_average_data_properties(
     for rule in rule_abbr_list:
         data_dict[rule] = {}
         for prop_name in property_short_names:
-            rule_result_metadata_obj = RuleResultMetadata.objects.get(
+            rule_result_metadata_obj = RuleResultMetadata.objects.using(database).get(
                 short_name=prop_name
             )
             if (
@@ -260,12 +280,15 @@ def get_rule_result_average_data_properties(
 
 
 def get_satisfaction_histogram(
-    rule_abbr_list: Iterable[str], election_filters: dict = {}
+    rule_abbr_list: Iterable[str],
+    election_filters: dict = {},
+    database: str = "default"
 ) -> dict[str, list[float]]:
     data_dict = get_rule_result_average_data_properties(
         rule_abbr_list,
         ["agg_nrmcost_sat", "avg_nrmcost_sat"],
         election_filters=election_filters,
+        database=database
     )
     data_dict["data"] = {
         rule: {
@@ -283,19 +306,20 @@ def get_election_property_histogram(
     num_bins: int = 20,
     by_ballot_type: bool = False,
     log_scale: bool = False,
+    database: str = "default"
 ) -> tuple[list, list]:
     ballot_type_names = [
-        prop_tuple[0] for prop_tuple in BallotType.objects.all().values_list("name")
+        prop_tuple[0] for prop_tuple in BallotType.objects.using(database).all().values_list("name")
     ]
 
-    election_query_set = filter_elections(**election_filters)
+    election_query_set = filter_elections(**election_filters, database=database)
 
-    election_meta_data_obj = ElectionMetadata.objects.filter(
+    election_meta_data_obj = ElectionMetadata.objects.using(database).filter(
         short_name=election_property_short_name
     )
     if election_meta_data_obj.exists():
         election_data_property_query = (
-            ElectionDataProperty.objects.all()
+            ElectionDataProperty.objects.using(database).all()
             .filter(
                 metadata__short_name=election_property_short_name,
                 election__in=election_query_set,
@@ -330,7 +354,8 @@ def get_election_property_histogram(
         )
 
     election_property = get_filterable_election_property_list(
-        [election_property_short_name]
+        [election_property_short_name],
+        database=database
     )["data"][0]
 
     return {"data": hist_data, "meta_data": {"election_property": election_property}}
@@ -342,6 +367,7 @@ def histogram_data_from_query_set_and_field(
     num_bins: int,
     by_category: dict = None,
     log_scale: bool = False,
+    database: str = "default"
 ) -> tuple[list, list]:
     # making sure all values are positive if log scale is chosen
     if log_scale:
@@ -436,17 +462,21 @@ def histogram_data_from_query_set_and_field(
 
 
 # could be optimized (looping through categories probably not necessary)
-def category_proportions(election_name: int, rule_abbreviation_list: str):
+def category_proportions(
+    election_name: int,
+    rule_abbreviation_list: str,
+    database: str = "default"
+) -> dict:
     try:
-        election_obj = Election.objects.all().get(name=election_name)
+        election_obj = Election.objects.using(database).all().get(name=election_name)
     except:
         raise ApiExcepetion(
             "Invalid election name.", status_code=status.HTTP_400_BAD_REQUEST
         )
 
     if election_obj.has_categories:
-        categories_query = Category.objects.all().filter(election=election_obj)
-        votes = PreferenceInfo.objects.all().filter(voter__election=election_obj)
+        categories_query = Category.objects.using(database).all().filter(election=election_obj)
+        votes = PreferenceInfo.objects.using(database).all().filter(voter__election=election_obj)
 
         category_names = []
         vote_cost_shares = []
@@ -472,7 +502,7 @@ def category_proportions(election_name: int, rule_abbreviation_list: str):
             vote_cost_share_sum += vote_cost_share["vote_cost_share"]
 
             for rule_abbreviation in rule_abbreviation_list:
-                projects_selected = Project.objects.all().filter(
+                projects_selected = Project.objects.using(database).all().filter(
                     election=election_obj,
                     rule_results_selected_by__rule__abbreviation=rule_abbreviation,
                 )
@@ -520,10 +550,12 @@ def category_proportions(election_name: int, rule_abbreviation_list: str):
 
 
 def filter_elections(
-    election_query_set: QuerySet | None = None, **election_filters
+    election_query_set: QuerySet | None = None,
+    database: str = "default",
+    **election_filters
 ) -> QuerySet:
     if election_query_set == None:
-        election_query_set = Election.objects.all()
+        election_query_set = Election.objects.using(database).all()
 
     for election_property in election_filters:
         if election_property in Election.public_fields:
@@ -533,7 +565,7 @@ def filter_elections(
                 election_property_filter=election_filters[election_property],
             )
         elif (
-            ElectionMetadata.objects.all().filter(short_name=election_property).exists()
+            ElectionMetadata.objects.using(database).all().filter(short_name=election_property).exists()
         ):
             election_query_set = _filter_elections_by_metadata(
                 election_query_set=election_query_set,
@@ -553,7 +585,9 @@ def filter_elections(
 
 
 def _filter_elections_by_model_field(
-    election_query_set: QuerySet, election_property: str, election_property_filter
+    election_query_set: QuerySet,
+    election_property: str,
+    election_property_filter
 ) -> QuerySet:
     type = _get_type_from_model_field(Election._meta.get_field(election_property))
     if type == "int" or type == "float":
@@ -643,7 +677,9 @@ def _filter_elections_by_model_field(
 
 
 def _filter_elections_by_metadata(
-    election_query_set: QuerySet, election_property: str, election_property_filter
+    election_query_set: QuerySet,
+    election_property: str,
+    election_property_filter
 ) -> QuerySet:
     # no type check, because all meta properties are numbers
     if "min" in election_property_filter and election_property_filter["min"] != None:
@@ -664,9 +700,10 @@ def filter_elections_by_rule_properties(
     election_query_set: QuerySet,
     rule_abbr_list: Iterable[str] = [],
     property_short_names: Iterable[str] = [],
+    database: str = "default"
 ) -> QuerySet:
     for rule in rule_abbr_list:
-        rule_result_query_set = RuleResult.objects.all().filter(rule__abbreviation=rule)
+        rule_result_query_set = RuleResult.objects.using(database).all().filter(rule__abbreviation=rule)
         for prop in property_short_names:
             rule_result_query_set = rule_result_query_set.filter(
                 Q(data_properties__metadata__short_name=prop)
@@ -677,3 +714,32 @@ def filter_elections_by_rule_properties(
         )
 
     return election_query_set
+
+
+def handle_file_upload(pb_file):
+    fs = FileSystemStorage()
+    file_path = "tmp/" + pb_file.name
+    fs.save(file_path, pb_file)
+    
+    try:
+        election_name = add_election(
+            file_path=file_path,
+            override=True,
+            database="user_submitted",
+            verbosity=3
+        )
+        compute_election_properties(
+            [election_name],
+            exact=False,
+            override=True,
+            use_db=True,
+            database="user_submitted",
+            verbosity=3
+        )
+        return
+    except Exception as e:
+        raise e
+    finally:
+        fs.delete(file_path)
+
+    return True

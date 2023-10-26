@@ -26,11 +26,14 @@ def election_details(request):
             request.GET.get("property_short_names", "null")
         )
         ballot_type = json.loads(request.GET.get("ballot_type", "null"))
+        user_sumbmitted = json.loads(request.GET.get("user_submitted", "null"))
+        database =  user_sumbmitted or "default"  
 
         data = get_election_details(
             property_short_names=property_short_names,
             ballot_type=ballot_type,
             filters=filters,
+            database=database
         )
         return Response(data, headers=caching_parameters)
 
@@ -39,7 +42,9 @@ def election_details(request):
 def project_list(request):
     if request.method == "GET":
         election_name = json.loads(request.GET.get("election_name", "null"))
-        data = get_project_list(election_name)
+        user_sumbmitted = json.loads(request.GET.get("user_submitted", "null"))
+        database =  user_sumbmitted or "default"  
+        data = get_project_list(election_name, database=database)
         return Response(data, headers=caching_parameters)
 
 
@@ -82,10 +87,13 @@ def rule_result_data_property(request):
         rule_abbr_list = json.loads(request.GET.get("rule_abbr_list", "[]"))
         property_short_names = json.loads(request.GET.get("property_short_names", "[]"))
         election_filters = json.loads(request.GET.get("election_filters", "{}"))
+        user_sumbmitted = json.loads(request.GET.get("user_submitted", "null"))
+        database =  user_sumbmitted or "default"  
         data_dict = get_rule_result_average_data_properties(
             rule_abbr_list=rule_abbr_list,
             property_short_names=property_short_names,
             election_filters=election_filters,
+            database=database
         )
 
         return Response(data_dict, headers=caching_parameters)
@@ -96,8 +104,12 @@ def voter_satisfaction_histogram(request):
     if request.method == "GET":
         rule_abbr_list = json.loads(request.GET.get("rule_abbr_list", "[]"))
         election_filters = json.loads(request.GET.get("election_filters", "{}"))
+        user_sumbmitted = json.loads(request.GET.get("user_submitted", "null"))
+        database =  user_sumbmitted or "default"  
         data_dict = get_satisfaction_histogram(
-            rule_abbr_list=rule_abbr_list, election_filters=election_filters
+            rule_abbr_list=rule_abbr_list,
+            election_filters=election_filters,
+            database=database
         )
         return Response(data_dict, headers=caching_parameters)
 
@@ -130,7 +142,20 @@ def rule_category_proportions(request):
         rule_abbreviation_list = json.loads(
             request.GET.get("rule_abbreviation_list", "{}")
         )
+        user_sumbmitted = json.loads(request.GET.get("user_submitted", "null"))
+        database =  user_sumbmitted or "default"  
         category_proportion_data = category_proportions(
-            election_name=election_name, rule_abbreviation_list=rule_abbreviation_list
+            election_name=election_name,
+            rule_abbreviation_list=rule_abbreviation_list,
+            database=database
         )
         return Response(category_proportion_data, headers=caching_parameters)
+
+
+
+@api_view(["POST"])
+def submit_pb_file(request):
+    if request.method == "POST":
+        pb_file = request.FILES.get("pb_file")
+        response_data = handle_file_upload(pb_file)
+        return Response(response_data, headers=caching_parameters)
