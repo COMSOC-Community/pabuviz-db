@@ -4,6 +4,8 @@ import json
 from django.core.files.storage import FileSystemStorage
 from pb_visualizer.management.commands.add_election import add_election
 from pb_visualizer.management.commands.compute_election_properties import compute_election_properties
+from pb_visualizer.management.commands.compute_rule_result_properties import compute_rule_result_properties
+from pb_visualizer.management.commands.compute_rule_results import compute_rule_results
 
 
 from .models import Rule
@@ -722,7 +724,7 @@ def handle_file_upload(pb_file):
     fs.save(file_path, pb_file)
     
     try:
-        election_name = add_election(
+        election_name, election_id = add_election(
             file_path=file_path,
             override=True,
             database="user_submitted",
@@ -736,10 +738,26 @@ def handle_file_upload(pb_file):
             database="user_submitted",
             verbosity=3
         )
-        return
+        compute_rule_results(
+            [election_name],
+            rule_list=["greedy_cost", "mes_cost"],
+            exact=False,
+            override=True,
+            use_db=True,
+            database="user_submitted",
+            verbosity=3,
+        )
+        compute_rule_result_properties(
+            [election_name],
+            exact=False,
+            override=True,
+            use_db=True,
+            database="user_submitted",
+            verbosity=3,
+        )
     except Exception as e:
         raise e
     finally:
         fs.delete(file_path)
 
-    return True
+    return {election_name: election_name, election_id: election_id}

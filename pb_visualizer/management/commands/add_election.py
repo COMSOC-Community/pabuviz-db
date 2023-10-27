@@ -535,7 +535,7 @@ def add_election(file_path: str, override: bool, database: str = 'default', verb
     os.makedirs(data_dir_path, exist_ok=True)
     shutil.copyfile(file_path, os.path.join(data_dir_path, os.path.basename(file_path)))
 
-    return election_obj.name
+    return election_obj.name, election_obj.id
 
 class Command(BaseCommand):
     help = "Add .pb file to database"
