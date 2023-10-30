@@ -29,7 +29,6 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework import status
 
 import logging
-
 logger = logging.getLogger('django')
 
 class ApiExcepetion(PermissionDenied):
@@ -149,8 +148,6 @@ def get_project_list(election_name: int, database: str = "default") -> list[dict
 def get_rule_family_list(database: str = "default") -> list[dict]:
     rule_family_query = RuleFamily.objects.using(database).all().filter(parent_family__isnull=True)
     rule_family_serializer = RuleFamilyFullSerializer(rule_family_query, many=True)
-    logger.warning("received request")
-    
     return {"data": rule_family_serializer.data}
 
 

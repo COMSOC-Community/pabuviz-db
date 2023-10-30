@@ -6,14 +6,6 @@ from rest_framework.decorators import api_view
 from pb_visualizer.serializers import *
 from pb_visualizer.api import *
 
-import logging
-
-logger = logging.getLogger('django')
-formatter = logging.Formatter("%(asctime)s;%(levelname)s;%(message)s")
-# add formatter to ch
-logger.setFormatter(formatter)
-
-
 caching_parameters = {"cache-control": "max-age=1"}
 
 
@@ -64,11 +56,6 @@ def rule_family_list(request):
 
 @api_view(["GET"])
 def ballot_type_list(request):
-    logger.debug("debug")
-    logger.log(1,"log")
-    logger.info("info")
-    logger.warn("warn")
-    logger.exception("exception")
     if request.method == "GET":
         data = get_ballot_type_list()
         return Response(data, headers=caching_parameters)
