@@ -62,17 +62,12 @@ def _get_type_from_model_field(field):
 
 
 def get_ballot_type_list(database: str = "default") -> list[dict]:
-    logger.warning("received request")
     ballot_type_query = BallotType.objects.using(database).all()
-    logger.warning("ballot_type_query defined")
     ballot_type_query = ballot_type_query.annotate(
         num_elections=Count("elections")
     ).order_by("order_priority")
-    logger.warning("ballot_type_query annotated")
     ballot_type_query = ballot_type_query.filter(num_elections__gt=0)
-    logger.warning("ballot_type_query filtered")
     ballot_type_serializer = BallotTypeSerializer(ballot_type_query, many=True)
-    logger.warning("ballot_type_query serialized")
     return {"data": ballot_type_serializer.data}
 
 
@@ -154,6 +149,7 @@ def get_project_list(election_name: int, database: str = "default") -> list[dict
 def get_rule_family_list(database: str = "default") -> list[dict]:
     rule_family_query = RuleFamily.objects.using(database).all().filter(parent_family__isnull=True)
     rule_family_serializer = RuleFamilyFullSerializer(rule_family_query, many=True)
+    logger.warning("received request")
     
     return {"data": rule_family_serializer.data}
 
