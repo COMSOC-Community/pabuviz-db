@@ -65,7 +65,7 @@ def rule_family_list(request):
 @api_view(["GET"])
 def ballot_type_list(request):
     logger.debug("debug")
-    logger.log("log")
+    logger.log(1,"log")
     logger.info("info")
     logger.warn("warn")
     logger.exception("exception")
