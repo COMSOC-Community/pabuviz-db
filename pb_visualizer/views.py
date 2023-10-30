@@ -9,6 +9,10 @@ from pb_visualizer.api import *
 import logging
 
 logger = logging.getLogger('django')
+formatter = logging.Formatter("%(asctime)s;%(levelname)s;%(message)s")
+# add formatter to ch
+logger.setFormatter(formatter)
+
 
 caching_parameters = {"cache-control": "max-age=1"}
 
