@@ -62,17 +62,17 @@ def _get_type_from_model_field(field):
 
 
 def get_ballot_type_list(database: str = "default") -> list[dict]:
-    logger.info("received request")
+    logger.warning("received request")
     ballot_type_query = BallotType.objects.using(database).all()
-    logger.info("ballot_type_query defined")
+    logger.warning("ballot_type_query defined")
     ballot_type_query = ballot_type_query.annotate(
         num_elections=Count("elections")
     ).order_by("order_priority")
-    logger.info("ballot_type_query annotated")
+    logger.warning("ballot_type_query annotated")
     ballot_type_query = ballot_type_query.filter(num_elections__gt=0)
-    logger.info("ballot_type_query filtered")
+    logger.warning("ballot_type_query filtered")
     ballot_type_serializer = BallotTypeSerializer(ballot_type_query, many=True)
-    logger.info("ballot_type_query serialized")
+    logger.warning("ballot_type_query serialized")
     return {"data": ballot_type_serializer.data}
 
 
