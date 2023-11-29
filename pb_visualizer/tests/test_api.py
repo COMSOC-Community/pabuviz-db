@@ -393,7 +393,7 @@ class TestApi(TestCase):
 
         proportionality_data = category_proportions(
             election_name="e0", rule_abbreviation_list=["rule1", "rule2", "rule3"]
-        )
+        ).data
 
         assert proportionality_data["category_names"] == ["0", "1"]
         assert proportionality_data["vote_cost_shares"] == [7.0 / 13.0, 6.0 / 13.0]
@@ -428,7 +428,7 @@ class TestApi(TestCase):
 
         proportionality_data = category_proportions(
             election_name="e2", rule_abbreviation_list=["rule1", "rule2", "rule3"]
-        )
+        ).data
         assert proportionality_data["category_names"] == []
         assert proportionality_data["vote_cost_shares"] == []
         assert proportionality_data["result_cost_shares"]["rule1"] == []

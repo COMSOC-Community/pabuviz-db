@@ -34,16 +34,11 @@ class BallotType(models.Model):
 
 
 class RuleFamily(models.Model):
-    # rule data
     name = models.CharField(max_length=50, unique=True)
     abbreviation = models.SlugField(
         max_length=25, unique=True, verbose_name="abbreviation", primary_key=True
     )
     description = models.TextField(blank=True, verbose_name="")
-    applies_to = models.ManyToManyField(BallotType, related_name="rule_families")
-
-    # meta data
-    order_priority = models.IntegerField(default=100)
     parent_family = models.ForeignKey(
         'RuleFamily',
         on_delete=models.CASCADE,
@@ -51,6 +46,8 @@ class RuleFamily(models.Model):
         null=True,
         blank=True,
     )
+    applies_to = models.ManyToManyField(BallotType, related_name="rule_families")
+    order_priority = models.IntegerField(default=100)
 
     def applies_to_election(self, election):
         return self.applies_to.filter(name=election.ballot_type.name).exists()

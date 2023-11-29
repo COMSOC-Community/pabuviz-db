@@ -15,8 +15,6 @@ import pb_visualizer
 from pb_visualizer.models import *
 
 # here we can add multiple aliases for each of the vote types, rules and genders
-
-
 ballot_type_mapping = {
     "approval": ["approval"],
     "ordinal": ["ordinal"],

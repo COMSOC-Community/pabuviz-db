@@ -61,7 +61,6 @@ satisfaction_property_mapping = {
     "avg_borda_sat": {"sat_class": Additive_Borda_Sat},
 }
 
-
 rule_result_property_mapping = {
     "inverted_cost_gini": lambda inst, profile, alloc: votersatisfaction.gini_coefficient_of_satisfaction(
         inst,
@@ -118,6 +117,8 @@ for abb, params in satisfaction_property_mapping.items():
 
 
 def rule_mapping(budget):
+    """Given a budget limit, returns a dictionary containing the short names of the rules in the db as keys
+    and the method and parameters to compute it using the pabutools as values."""
     res = {
         # approval
         "greedy_card": {
@@ -276,8 +277,8 @@ def rule_mapping(budget):
         )
     return res
 
-
 def project_object_to_pabutools(project: Project):
+    """Takes a django Project object and returns corresponding pabutools Project."""
     return pbelection.Project(
         project.project_id,
         fractions.str_as_frac(str(project.cost)),
@@ -285,10 +286,10 @@ def project_object_to_pabutools(project: Project):
         [target.name for target in project.targets.all()],
     )
 
-
 def election_object_to_pabutools(
         election: Election,
 ) -> tuple[pbelection.Instance, pbelection.Profile]:
+    """Takes a django Election object and returns corresponding pabutools Instance and Profile."""
     categories = {cat.name for cat in election.categories.all()}
     targets = {tar.name for tar in election.targets.all()}
     projects = {

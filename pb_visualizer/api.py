@@ -32,6 +32,7 @@ import logging
 logger = logging.getLogger('django')
 
 class ApiExcepetion(PermissionDenied):
+    """Exception to be sent back as a response with the detail as error message."""
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "Bad request"
     default_code = "invalid"
@@ -43,6 +44,10 @@ class ApiExcepetion(PermissionDenied):
 
 
 def _get_type_from_model_field(field):
+    """
+    Maps a django Field to a type string. The strings used match the ones used
+    with the inner_type model field on several models in the db.
+    """
     field_type = type(field)
     if field_type == models.IntegerField:
         return "int"
@@ -60,17 +65,54 @@ def _get_type_from_model_field(field):
         return "not supported"
 
 
-def get_ballot_type_list(database: str = "default") -> list[dict]:
+def get_ballot_type_list(filter_existing: bool = True, database: str = "default") -> dict[str,list[dict]]:
+    """
+    Returns a serialized list of ballot types.
+
+    Parameters
+    ----------
+        filter_existing: bool,
+            if True, then only ballot types with an election in the db are returned
+        database: string
+            name of the database to work on
+    
+    Returns
+    -------
+        dict
+            "data": serialized list of ballot types
+    """
     ballot_type_query = BallotType.objects.using(database).all()
-    ballot_type_query = ballot_type_query.annotate(
-        num_elections=Count("elections")
-    ).order_by("order_priority")
-    ballot_type_query = ballot_type_query.filter(num_elections__gt=0)
+    
+    if filter_existing:
+        ballot_type_query = ballot_type_query.annotate(
+            num_elections=Count("elections")
+        ).order_by("order_priority")
+        ballot_type_query = ballot_type_query.filter(num_elections__gt=0)
+    
     ballot_type_serializer = BallotTypeSerializer(ballot_type_query, many=True)
     return {"data": ballot_type_serializer.data}
 
 
-def get_election_list(filters: dict, database: str = "default") -> list[dict]:
+def get_election_list(filters: dict[str], database: str = "default") -> dict[str,list[dict]]:
+    """
+    Returns a serialized list of all elections satisfying the filters in the database.
+
+    Parameters
+    ----------
+        filters: dict
+            filters to filter the elections by,
+            for the format check filter_elections method.
+        database: string
+            name of the database to work on
+    
+    Returns
+    -------
+        dict
+            "data":
+                serialized list of elections
+            "metadata":
+                serialized list of all ballot types of these elections
+    """
     election_query_set = filter_elections(**filters, database=database)
     election_serializer = ElectionSerializer(election_query_set, many=True)
 
@@ -86,11 +128,37 @@ def get_election_list(filters: dict, database: str = "default") -> list[dict]:
 
 
 def get_election_details(
-    property_short_names,
+    property_short_names: list[str],
     ballot_type: str,
     filters: dict,
     database: str = "default"
-) -> list[dict]:
+) -> dict[str, list[dict]]:
+    """
+    Returns a serialized list of all elections of the given ballot type satisfying the filters in the database.
+    Additionally all election properties in property_short_names are injected into each election dictionary.
+
+    Parameters
+    ----------
+        property_short_names: list[str]
+            List of election property short names that should be included in the data.
+            To request all possible values, use get_filterable_election_property_list.
+        ballot_type: str,
+            the ballot type of the elections requested
+        filters: dict
+            filters to filter the elections by,
+            for the format check filter_elections method.
+        database: string
+            name of the database to work on
+    
+    Returns
+    -------
+        dict
+            "data":
+                list of elections dictionaries
+                with all given property short names as keys and their values as values
+            "metadata":
+                serialized list of all given election properties
+    """
     election_query_set = filter_elections(**filters, database=database)
     election_details_collection = {}
 
@@ -98,7 +166,7 @@ def get_election_details(
         property_short_names=property_short_names,
         ballot_type=ballot_type,
         database=database
-    )["data"]
+    )
 
     for election_obj in election_query_set:
         election_dict = ElectionSerializer(election_obj).data
@@ -106,7 +174,7 @@ def get_election_details(
         election_details = {}
 
         # first we get all the properties that are fields of the election model
-        for property in properties:
+        for property in properties["data"]:
             if property["short_name"] in Election.public_fields:
                 election_details[property["short_name"]] = election_dict[
                     property["short_name"]
@@ -115,17 +183,43 @@ def get_election_details(
         # then we get all the properties that are ElectionMetadata
         data_props_query = ElectionDataProperty.objects.using(database).all().filter(
             election=election_obj,
-            metadata__short_name__in=[p["short_name"] for p in properties],
+            metadata__short_name__in=[p["short_name"] for p in properties["data"]],
         )
         for data_prop_obj in data_props_query:
             election_details[data_prop_obj.metadata.short_name] = data_prop_obj.value
 
         election_details_collection[election_obj.name] = election_details
 
-    return {"data": election_details_collection, "metadata": properties}
+    # TODO: also send metadata of properties or remove properties
+    return {"data": election_details_collection, "metadata": properties["data"]} 
 
 
-def get_project_list(election_name: int, database: str = "default") -> list[dict]:
+def get_project_list(
+    election_name: str,
+    database: str = "default"
+) -> dict[str]:
+    """
+    Returns a serialized list of all projects for a given election.
+
+    Parameters
+    ----------
+        election_name: str,
+            name of the election
+        database: str = "default"
+            name of the database to work on
+    
+    Returns
+    -------
+        dict
+            "data":
+                list of serialized Project objects
+            "metadata":
+                "rule_results_existing":
+                    serialized list of rules that have been computed for this election,
+                    this is needed to know whether a rule not present in the rules_selected_by field of the project
+                    did not choose the project or was just not computed
+
+    """
     if election_name == None:
         raise ApiExcepetion(
             "Please provide an election name with your request.",
@@ -145,7 +239,23 @@ def get_project_list(election_name: int, database: str = "default") -> list[dict
     }
 
 
-def get_rule_family_list(database: str = "default") -> list[dict]:
+def get_rule_family_list(database: str = "default") -> dict[str, list[dict]]:
+    """
+    Returns a serialized nested list of all RuleFamily objects.
+
+    Parameters
+    ----------
+        database: str = "default"
+            name of the database to work on
+    
+    Returns
+    -------
+        dict
+            "data":
+                serialized nested list of all RuleFamily objects,
+                the 'elements' field will be a serialized list of rules
+                    
+    """
     rule_family_query = RuleFamily.objects.using(database).all().filter(parent_family__isnull=True)
     rule_family_serializer = RuleFamilyFullSerializer(rule_family_query, many=True)
     return {"data": rule_family_serializer.data}
@@ -154,7 +264,24 @@ def get_rule_family_list(database: str = "default") -> list[dict]:
 def get_rule_result_property_list(
     property_short_names: Iterable[str] = None,
     database: str = "default"
-) -> list[dict]:
+) -> dict[str, list[dict]]:
+    """
+    Returns a serialized list of RuleResultMetadata objects.
+
+    Parameters
+    ----------
+        property_short_names: Iterable[str] = None
+            list of short names of the properties requested, if None all properties will be returned
+        database: str = "default"
+            name of the database to work on
+    
+    Returns
+    -------
+        dict
+            "data":
+                serialized list of RuleResultMetadata objects
+                    
+    """
     query = RuleResultMetadata.objects.using(database).all()
     if property_short_names != None:
         query = query.filter(short_name__in=property_short_names)
@@ -164,11 +291,39 @@ def get_rule_result_property_list(
 
 
 def get_filterable_election_property_list(
-    property_short_names: Iterable[str],
+    property_short_names: Iterable[str] = None,
     ballot_type: str = None,
     database: str = "default"
-) -> list[dict]:
+) -> dict[str, list[dict[str, dict]]]:
+    """
+    Returns a serialized list of election properties, that are supported as filters.
+    This is a combination of ElectionMetadata objects supporting the ballot type and all public Election model fields.
+    The fields are 'translated' to look like serialized ElectionMetadata objects.
+    Every property will thus be a dictionary with "name", "short_name", "description" and "inner_type".
+    If "inner_type" is "reference" (e.g. if a field is ForeignKey), there will be another key "referencable_objects",
+    containing all possible referenced objects of that election property, each with a "name" and "description" key.
+
+    Parameters
+    ----------
+        property_short_names: Iterable[str]
+            list of short names of the election properties requested, if None all properties will be returned
+        ballot_type: str = None
+            name of the ballot type, many properties not apply to some of them
+        database: str = "default"
+            name of the database to work on
+    
+    Returns
+    -------
+        dict
+            "data":
+                serialized list of ElectionMetadata objects
+    """
     def field_to_property_dict(field_name):
+        """
+        Translates a django field to a dictionary with name, short_name, description, inner_type
+        to match the structure of a serialized ElectionDataProperty.
+        For ForeignKey fields also collects all possible referenced objects and saves them in the "referencable_objects" key
+        """
         property_field = Election._meta.get_field(field_name)
 
         property_dict = {
@@ -194,7 +349,6 @@ def get_filterable_election_property_list(
         return property_dict
 
     properties = []
-    referencable_objects = {}
 
     for field_name in Election.public_fields:
         if property_short_names == None or field_name in property_short_names:
@@ -210,7 +364,6 @@ def get_filterable_election_property_list(
 
     return {
         "data": properties,
-        "metadata": {"referencable_objects": referencable_objects},
     }
 
 
@@ -219,8 +372,32 @@ def get_rule_result_average_data_properties(
     property_short_names: Iterable[str],
     election_filters: dict = {},
     database: str = "default"
-) -> dict[str, dict[str, float]]:
+) -> dict[str]:
+    """
+    Returns for each given rule and rule result property, the average value of that property for the result of that rule.
+    Only considers elections that have all given rules and rule result properties computed in the database.
+
+    Parameters
+    ----------
+        rule_abbr_list: Iterable[str]
+            list of abbreviations of the rules
+        property_short_names: Iterable[str]
+            list of short names of the election properties
+        election_filters: dict = {}
+            additional filters for the elections considered, see filter_elections method for details 
+        database: str = "default"
+            name of the database to work on
     
+    Returns
+    -------
+        dict
+            "data":
+                dictionary containing the rule abbreviations as key and a dictionary as value,
+                containing the property short names and their average value
+            "metadata":
+                "num_elections":
+                    the number of election over which the average was taken
+    """
     election_query_set = filter_elections(**election_filters, database=database)
     election_query_set = filter_elections_by_rule_properties(
         election_query_set,
@@ -279,6 +456,29 @@ def get_satisfaction_histogram(
     election_filters: dict = {},
     database: str = "default"
 ) -> dict[str, list[float]]:
+    """
+    Returns for each given rule, the satisfaction histogram for the result of that rule.
+    This is more or less only a wrapper for calling get_rule_result_average_data_properties on the agg_nrmcost_sat property.
+
+    Parameters
+    ----------
+        rule_abbr_list: Iterable[str]
+            list of abbreviations of the rules
+        election_filters: dict = {}
+            additional filters for the elections considered, see filter_elections method for details 
+        database: str = "default"
+            name of the database to work on
+    
+    Returns
+    -------
+        dict
+            "data":
+                dictionary containing the rule abbreviations as key and a dictionary as value,
+                containing "hist_data" (pabutools satisfaction_histogram result) and "avg" (average satisfaction)
+            "metadata":
+                "num_elections":
+                    the number of election over which the average was taken
+    """
     data_dict = get_rule_result_average_data_properties(
         rule_abbr_list,
         ["agg_nrmcost_sat", "avg_nrmcost_sat"],
@@ -303,6 +503,43 @@ def get_election_property_histogram(
     log_scale: bool = False,
     database: str = "default"
 ) -> tuple[list, list]:
+    """
+    Returns histogram data for a given election property
+
+    Parameters
+    ----------
+        election_property_short_name: str
+            short name of the elecion property
+        election_filters: dict = {}
+            additional filters for the elections considered, see filter_elections method for details 
+        num_bins: int = 20
+            number of histogram bins
+        by_ballot_type: bool = False
+            if True, th histogramm data will be grouped by the ballot type,
+            the bin selection will be made globally, but the values will be given for each ballot type separately
+        log_scale: bool = False
+            whether to use logarithmic scale for the histogram bins,
+            if True, all values smaller or equal zero will be ignored
+        database: str = "default"
+            name of the database to work on
+    
+    Returns
+    -------
+        dict
+            "data":
+                dictionary containing the histogram data:
+                    "bins":
+                        list of length num_bins+1, containing all bin border values
+                    "bin_midpoints":
+                        list of middle points for each bin, useful for visualization
+                    "values":
+                        list of values for each bin if by_ballot_type is False
+                        else dict with ballot type name as key and list of values for each bin as value
+            "metadata":
+                "election_property":
+                    the serialized election property,
+                    same format as get_filterable_election_property_list returns
+    """
     ballot_type_names = [
         prop_tuple[0] for prop_tuple in BallotType.objects.using(database).all().values_list("name")
     ]
@@ -312,6 +549,7 @@ def get_election_property_histogram(
     election_meta_data_obj = ElectionMetadata.objects.using(database).filter(
         short_name=election_property_short_name
     )
+    # if property is ElectionMetadata
     if election_meta_data_obj.exists():
         election_data_property_query = (
             ElectionDataProperty.objects.using(database).all()
@@ -334,6 +572,7 @@ def get_election_property_histogram(
             num_bins=num_bins,
             log_scale=log_scale,
         )
+    # if property is Election model field
     else:
         hist_data = histogram_data_from_query_set_and_field(
             query_set=election_query_set,
@@ -361,9 +600,43 @@ def histogram_data_from_query_set_and_field(
     field_name: str,
     num_bins: int,
     by_category: dict = None,
-    log_scale: bool = False,
-    database: str = "default"
-) -> tuple[list, list]:
+    log_scale: bool = False
+) -> dict[str, list]:
+    """
+    computes histogram data for a given query set and a model field of the corresponding model 
+
+    Parameters
+    ----------
+        query_set: QuerySet
+            the query set to compute on,
+            make sure it is "using" the right database
+        field_name: str
+            name of the model field
+        num_bins: int
+            number of histogram bins
+        by_category: dict = None
+            if not None, will group the output into the given categories
+            the dict should have the keys:
+                "field_name":
+                    the field name that holds the category for each object,
+                    this can also be deeper in the model relations using the django double underscore (e.g. "object__related__field_name") 
+                "categories":
+                    all possible categories of that field
+        log_scale: bool = False
+            whether to use logarithmic scale for the histogram bins,
+            if True, all values smaller or equal zero will be ignored
+    
+    Returns
+    -------
+        dictionary
+            "bins":
+                list of length num_bins+1, containing all bin border values
+            "bin_midpoints":
+                list of middle points for each bin, useful for visualization
+            "values":
+                list of values for each bin if by_category is None
+                else dict with category name as key and list of values for each bin as value
+    """
     # making sure all values are positive if log scale is chosen
     if log_scale:
         query_set = query_set.filter(**{field_name + "__gt": 0})
@@ -374,6 +647,7 @@ def histogram_data_from_query_set_and_field(
             for category in by_category["categories"]
         }
         
+    # special case: no elements in query set
     if (not query_set.exists()):
         return {
             "bins": [],
@@ -384,6 +658,7 @@ def histogram_data_from_query_set_and_field(
     min_value = float(query_set.aggregate(Min(field_name))[field_name + "__min"])
     max_value = float(query_set.aggregate(Max(field_name))[field_name + "__max"])
 
+    # special case: all elements have the same value
     if min_value == max_value:
         if by_category:
             values = {
@@ -398,6 +673,7 @@ def histogram_data_from_query_set_and_field(
             "values": values,
         }
 
+    # computing the annotation formula for annotating each element in the query set with an integer corresponding to the bin
     if log_scale:
         bins = [
             min_value * (max_value / min_value) ** (float(i) / num_bins)
@@ -427,11 +703,13 @@ def histogram_data_from_query_set_and_field(
             * num_bins
         )
 
+    # defining the counting formulas for counting the number of objects annotated with each bin id
     counters = {str(i): Count("id", filter=Q(hist_bin=i)) for i in range(num_bins - 1)}
     counters[str(num_bins - 1)] = Count(
         "id", filter=Q(hist_bin__in=[num_bins - 1, num_bins])
     )  # last bin should be closed interval
 
+    # finally annotating the objects using the annotation formula and counting them using the counting formulas
     if by_category:
         for category in by_category["categories"]:
             query_sets_by_category[category] = query_sets_by_category[
@@ -458,10 +736,35 @@ def histogram_data_from_query_set_and_field(
 
 # could be optimized (looping through categories probably not necessary)
 def category_proportions(
-    election_name: int,
+    election_name: str,
     rule_abbreviation_list: str,
     database: str = "default"
 ) -> dict:
+    """
+    Returns category proportions for a given election and a list of rule
+
+    Parameters
+    ----------
+        election_name: str,
+            name of the election
+        rule_abbreviation_list: str
+            abbreviations of the rules
+        database: str = "default"
+            name of the database to work on
+    
+    Returns
+    -------
+        dict
+            "data": dict
+                "category_names":
+                    list of category names of the election
+                "vote_cost_shares":
+                    list of vote cost shares for the categories,
+                    that is the total number of votes of each project in the category times its cost, normalized
+                "result_cost_shares":
+                    dictionary, for each rule short name the list of result cost shares for the categories,
+                    that is the sum of costs of selected projects in the category, normalized
+    """
     try:
         election_obj = Election.objects.using(database).all().get(name=election_name)
     except:
@@ -538,9 +841,11 @@ def category_proportions(
             rule_abbreviation: [] for rule_abbreviation in rule_abbreviation_list
         }
     return {
-        "category_names": category_names,
-        "vote_cost_shares": vote_cost_shares,
-        "result_cost_shares": result_cost_shares,
+        "data": {
+            "category_names": category_names,
+            "vote_cost_shares": vote_cost_shares,
+            "result_cost_shares": result_cost_shares,
+        }
     }
 
 
@@ -549,6 +854,43 @@ def filter_elections(
     database: str = "default",
     **election_filters
 ) -> QuerySet:
+    # """
+    # Returns histogram data for a given election property
+
+    # Parameters
+    # ----------
+    #     election_property_short_name: str
+    #         short name of the elecion property
+    #     election_filters: dict = {}
+    #         additional filters for the elections considered, see filter_elections method for details 
+    #     num_bins: int = 20
+    #         number of histogram bins
+    #     by_ballot_type: bool = False
+    #         if True, th histogramm data will be grouped by the ballot type,
+    #         the bin selection will be made globally, but the values will be given for each ballot type separately
+    #     log_scale: bool = False
+    #         whether to use logarithmic scale for the histogram bins,
+    #         if True, all values smaller or equal zero will be ignored
+    #     database: str = "default"
+    #         name of the database to work on
+    
+    # Returns
+    # -------
+    #     dict
+    #         "data":
+    #             dictionary containing the histogram data:
+    #                 "bins":
+    #                     list of length num_bins+1, containing all bin border values
+    #                 "bin_midpoints":
+    #                     list of middle points for each bin, useful for visualization
+    #                 "values":
+    #                     list of values for each bin if by_ballot_type is False
+    #                     else dict with ballot type name as key and list of values for each bin as value
+    #         "metadata":
+    #             "election_property":
+    #                 the serialized election property,
+    #                 same format as get_filterable_election_property_list returns
+    # """
     if election_query_set == None:
         election_query_set = Election.objects.using(database).all()
 
@@ -661,7 +1003,6 @@ def _filter_elections_by_model_field(
                     type
                 )
             )
-
     else:
         # other types (e.g. foreign keys) not yet supported, if you add a field of a different type, write a filter here
         raise NotImplementedError(
@@ -676,7 +1017,7 @@ def _filter_elections_by_metadata(
     election_property: str,
     election_property_filter
 ) -> QuerySet:
-    # no type check, because all meta properties are numbers
+    # no type check, because all election meta properties are numbers
     if "min" in election_property_filter and election_property_filter["min"] != None:
         election_query_set = election_query_set.filter(
             data_properties__metadata__short_name=election_property,
@@ -712,6 +1053,9 @@ def filter_elections_by_rule_properties(
 
 
 def handle_file_upload(pb_file):
+    """
+    WORK IN PROGRESS
+    """
     fs = FileSystemStorage()
     file_path = "tmp/" + pb_file.name
     fs.save(file_path, pb_file)
