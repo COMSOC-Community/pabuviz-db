@@ -36,14 +36,35 @@ CORS_ALLOWED_ORIGINS = [
 ````
 
 
+install python libraries (depending on which database backend is used, you might install more packages accordingly):
+
 ```
 pip install numpy django djangorestframework django-cors-headers pabutools
+```
 
+
+setup the database:
+
+```
 python manage.py makemigrations
 python manage.py migrate
 python manage.py migrate --database user_submitted
 python manage.py initialize_db 
 python manage.py initialize_db --database user_submitted
+```
+
+populate the database with precomputed example data (adding elections will take some time):
+
+```
+python manage.py add_election -d pabulib_samples/ -v 3
+python manage.py import_election_properties -i pabulib_samples/Res_Election_InstanceProperties.csv -p pabulib_samples/Res_Election_ProfileProperties.csv
+python manage.py import_rule_results pabulib_samples/Res_RuleResults.csv
+python manage.py import_rule_result_properties pabulib_samples/Res_RuleResult_Properties.csv
+```
+
+or populate it with your own .pb files and compute the properties:
+
+```
 python manage.py add_election -d <path to .pb file directory> -v 3
 python manage.py compute_election_properties -v 3
 python manage.py compute_rule_results -v 3

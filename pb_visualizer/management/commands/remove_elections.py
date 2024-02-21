@@ -20,7 +20,7 @@ class Command(BaseCommand):
             nargs="*",
             type=str,
             default=None,
-            help="Give a list of election ids which you want to remove.",
+            help="Give a list of election ids which you want to remove. If none is given, all elections are removed.",
         )
         parser.add_argument(
             "--database",

@@ -179,7 +179,7 @@ class Election(models.Model):
     # meta data
     modification_date = models.DateField(auto_now=True)
 
-    file_name = models.CharField(max_length=100, blank=True, null=True, unique=True)
+    file_name = models.CharField(max_length=150, blank=True, null=True, unique=True)
     file_size = models.FloatField(default=0)
 
     public_fields = [

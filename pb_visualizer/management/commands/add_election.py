@@ -46,12 +46,13 @@ def raise_missing_data_exception(type, key, additional_info=""):
     )
 
 
-def generate_name(unit, subunit, district, date):
+def generate_name(unit, subunit, district, instance, date):
     if unit:
         return (
             unit
             + (", " + subunit if subunit else "")
             + (", " + district if district else "")
+            + (", " + instance if instance else "")
             + (", " + date.strftime("%Y-%m") if date else "")
         )
     else:
@@ -160,9 +161,15 @@ def collect_election_info(
                 )
 
         elif key in ["date_begin", "date_end"]:
-            election_defaults[key] = datetime.datetime.strptime(
-                election_info[key], "%d.%m.%Y"
-            ).date()
+            date_comp = election_info[key].split('.') # poland_katowice_2020_podlesie.pb
+            year = int(date_comp[-1])
+            month = 1
+            day = 1
+            if len(date_comp) > 1:
+                month = int(date_comp[-2])
+            if len(date_comp) > 2:
+                day = int(date_comp[-3])
+            election_defaults[key] = datetime.date(year, month, day)
 
         else:
             if verbosity > 0:
@@ -183,6 +190,7 @@ def collect_election_info(
             election_defaults.get("unit"),
             election_defaults.get("subunit"),
             election_defaults.get("district"),
+            election_defaults.get("instance"),
             election_defaults.get("date_begin"),
         )  # TODO: come up with better automated naming
 
@@ -399,7 +407,7 @@ def add_election(file_path: str, override: bool, database: str = 'default', verb
                 print("removing existing election...")
             election_query.delete()
         else:
-            raise Exception("Election with same name already exists")
+            raise Exception(f"Election with name {election_info['defaults']['name']} already exists")
 
     if verbosity > 1:
         print("creating election object {}".format(election_info["defaults"]["name"]))
