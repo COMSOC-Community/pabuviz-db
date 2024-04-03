@@ -5,9 +5,13 @@ from pb_visualizer.models import *
 
 def remove_elections(election_ids=None, database="default"):
     if election_ids is None:
-        Election.objects.using(database).all().delete()
+        print("removing all elections...")
+        election_query = Election.objects.using(database).all()
     else:
-        Election.objects.using(database).get(id__in=election_ids).delete()
+        election_query = Election.objects.using(database).get(id__in=election_ids)
+    for e in election_query:
+        print("deleting", e.name)
+        e.delete()
 
 
 class Command(BaseCommand):

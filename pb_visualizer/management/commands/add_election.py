@@ -2,7 +2,8 @@ import datetime
 import os
 import shutil
 import traceback
-
+import random
+ 
 from django.core import management
 from django.contrib.staticfiles import finders
 from django.core.management.base import BaseCommand
@@ -46,14 +47,15 @@ def raise_missing_data_exception(type, key, additional_info=""):
     )
 
 
-def generate_name(unit, subunit, district, instance, date):
+def generate_name(unit, subunit, district, instance, date, randomize=False):
     if unit:
         return (
             unit
-            + (", " + subunit if subunit else "")
-            + (", " + district if district else "")
-            + (", " + instance if instance else "")
-            + (", " + date.strftime("%Y-%m") if date else "")
+            + (f", {subunit}" if subunit else "")
+            + (f", {district}" if district else "")
+            + (f", {instance}" if instance else "")
+            + (f", {date.strftime('%Y-%m')}" if date else "")
+            + (f"_{random.randint(0, 1000):04d}" if randomize else "")
         )
     else:
         raise_missing_data_exception("election", "unit")
@@ -69,6 +71,7 @@ def collect_election_info(
     has_neighborhoods: bool,
     file_name: str,
     file_size: int,
+    randomize_name: bool = False,
     verbosity: int = 1,
 ):
     election_defaults = {}
@@ -192,8 +195,8 @@ def collect_election_info(
             election_defaults.get("district"),
             election_defaults.get("instance"),
             election_defaults.get("date_begin"),
-        )  # TODO: come up with better automated naming
-
+            randomize=randomize_name
+        )
     # we check that all obligatory fields are present
     for field in Election._meta.get_fields():
         if (
@@ -362,9 +365,10 @@ def collect_voters_info(
     }
 
 
-def add_election(file_path: str, override: bool, database: str = 'default', verbosity: int = 1) -> str:
+def add_election(file_path: str, override: bool, database: str = 'default', size_limits: dict = {}, verbosity: int = 1) -> str:
     # We read and parse the file
-    # election_info, projects_info, voters_info = parse_pb_file(file_path)
+    # size_limits can contain keys "votes" and/or "projects" with an integer.
+    # If the number of voters/projects exceeds this number an exception will be raised. 
     if verbosity > 1:
         print("parsing file...")
     instance_pabutools, profile_pabutools = parse_pabulib(file_path)
@@ -388,7 +392,8 @@ def add_election(file_path: str, override: bool, database: str = 'default', verb
         len(voters_info["neighborhoods_set"]) > 0,
         os.path.basename(file_path),
         os.path.getsize(file_path),
-        verbosity,
+        randomize_name = (database=="user_submitted"),
+        verbosity = verbosity,
     )
 
     if verbosity > 1:
@@ -398,6 +403,14 @@ def add_election(file_path: str, override: bool, database: str = 'default', verb
     election_info["defaults"]["ballot_type"] = ballot_type_obj
     rule_obj = Rule.objects.using(database).get(abbreviation=election_info["foreign_keys"]["rule"])
     election_info["defaults"]["rule"] = rule_obj
+
+    # check size limits if provided
+    if "votes" in size_limits:
+        if election_info["defaults"]["num_votes"] > size_limits["votes"]:
+            raise ValueError(f"Size limit exceeded. Current limits: {size_limits}")
+    if "projects" in size_limits:
+        if election_info["defaults"]["num_projects"] > size_limits["projects"]:
+            raise ValueError(f"Size limit exceeded. Current limits: {size_limits}")
 
     # create election object
     election_query = Election.objects.using(database).filter(name=election_info["defaults"]["name"])
@@ -665,10 +678,10 @@ class Command(BaseCommand):
                     try:
                         # Actually adding the election
                         add_election(
-                            file_path,
-                            options["override"],
-                            options["database"],
-                            options["verbosity"],
+                            file_path=file_path,
+                            override=options["override"],
+                            database=options["database"],
+                            verbosity=options["verbosity"],
                         )
                         if options["rm"]:
                             os.remove(file_path)
@@ -682,7 +695,7 @@ class Command(BaseCommand):
                             + str(traceback.format_exc())
                             + "	</strong></p>\n<ul>"
                         )
-                        print(traceback.format_exc())
+                        # print(traceback.format_exc())
                         print(e)
 
             # Finalizing the log

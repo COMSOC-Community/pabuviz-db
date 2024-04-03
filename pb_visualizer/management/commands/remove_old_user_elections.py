@@ -6,4 +6,7 @@ class Command(BaseCommand):
     help = 'Delete old user submitted elections'
 
     def handle(self, *args, **options):
-        Election.objects.using("user_submitted").filter(modification_date__lte=datetime.now()-timedelta(days=2)).delete()
+        query = Election.objects.using("user_submitted").filter(modification_date__lte=datetime.now()-timedelta(days=2))
+        for e in query:
+            print(f"deleting {e}")
+            e.delete()

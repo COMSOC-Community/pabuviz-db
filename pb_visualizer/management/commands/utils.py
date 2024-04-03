@@ -7,6 +7,22 @@ from pabutools.election import parse_pabulib
 from pb_visualizer.models import Election
 from pb_visualizer.pabutools import election_object_to_pabutools
 
+from rest_framework.exceptions import PermissionDenied
+from rest_framework import status
+
+
+class ApiExcepetion(PermissionDenied):
+    """Exception to be sent back as a response with the detail as error message."""
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Bad request"
+    default_code = "invalid"
+
+    def __init__(self, detail, status_code=None):
+        self.detail = detail
+        if status_code is not None:
+            self.status_code = status_code
+
+
 
 def print_if_verbose(string, required_verbosity=1, verbosity=1.0, persist=False):
     if verbosity < required_verbosity:

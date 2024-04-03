@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 import datetime
 import json
+import random
 from django.core.files.storage import FileSystemStorage
 from pb_visualizer.management.commands.add_election import add_election
 from pb_visualizer.management.commands.compute_election_properties import compute_election_properties
@@ -25,22 +26,13 @@ from django.db.models import (
 )
 from django.db.models.functions import Cast, Floor, Ln
 
-from rest_framework.exceptions import PermissionDenied
 from rest_framework import status
+from pb_visualizer.management.commands.utils import ApiExcepetion
 
 import logging
 logger = logging.getLogger('django')
 
-class ApiExcepetion(PermissionDenied):
-    """Exception to be sent back as a response with the detail as error message."""
-    status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = "Bad request"
-    default_code = "invalid"
 
-    def __init__(self, detail, status_code=None):
-        self.detail = detail
-        if status_code is not None:
-            self.status_code = status_code
 
 
 def _get_type_from_model_field(field):
@@ -187,6 +179,8 @@ def get_election_details(
         )
         for data_prop_obj in data_props_query:
             election_details[data_prop_obj.metadata.short_name] = data_prop_obj.value
+
+        election_details["user_submitted"] = (database == "user_submitted")
 
         election_details_collection[election_obj.name] = election_details
 
@@ -371,6 +365,7 @@ def get_rule_result_average_data_properties(
     rule_abbr_list: Iterable[str],
     property_short_names: Iterable[str],
     election_filters: dict = {},
+    include_incomplete_elections: bool = False,
     database: str = "default"
 ) -> dict[str]:
     """
@@ -399,12 +394,13 @@ def get_rule_result_average_data_properties(
                     the number of election over which the average was taken
     """
     election_query_set = filter_elections(**election_filters, database=database)
-    election_query_set = filter_elections_by_rule_properties(
-        election_query_set,
-        rule_abbr_list=rule_abbr_list,
-        property_short_names=property_short_names,
-        database=database
-    )
+    if not include_incomplete_elections:
+        election_query_set = filter_elections_by_rule_properties(
+            election_query_set,
+            rule_abbr_list=rule_abbr_list,
+            property_short_names=property_short_names,
+            database=database
+        )
     rule_result_data_property_query_set = RuleResultDataProperty.objects.using(database).all().filter(
         rule_result__election__in=election_query_set
     )
@@ -454,6 +450,7 @@ def get_rule_result_average_data_properties(
 def get_satisfaction_histogram(
     rule_abbr_list: Iterable[str],
     election_filters: dict = {},
+    include_incomplete_elections: bool = False,
     database: str = "default"
 ) -> dict[str, list[float]]:
     """
@@ -483,6 +480,7 @@ def get_satisfaction_histogram(
         rule_abbr_list,
         ["agg_nrmcost_sat", "avg_nrmcost_sat"],
         election_filters=election_filters,
+        include_incomplete_elections=include_incomplete_elections,
         database=database
     )
     data_dict["data"] = {
@@ -509,13 +507,13 @@ def get_election_property_histogram(
     Parameters
     ----------
         election_property_short_name: str
-            short name of the elecion property
+            short name of the election property
         election_filters: dict = {}
             additional filters for the elections considered, see filter_elections method for details 
         num_bins: int = 20
             number of histogram bins
         by_ballot_type: bool = False
-            if True, th histogramm data will be grouped by the ballot type,
+            if True, th histogram data will be grouped by the ballot type,
             the bin selection will be made globally, but the values will be given for each ballot type separately
         log_scale: bool = False
             whether to use logarithmic scale for the histogram bins,
@@ -917,7 +915,6 @@ def filter_elections(
                 ),
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
-
     return election_query_set
 
 
@@ -1057,7 +1054,7 @@ def handle_file_upload(pb_file):
     WORK IN PROGRESS
     """
     fs = FileSystemStorage()
-    file_path = "tmp/" + pb_file.name
+    file_path = "tmp/" + pb_file.name + f"_{random.randint(0, 10000):}"
     fs.save(file_path, pb_file)
     
     try:
@@ -1065,6 +1062,10 @@ def handle_file_upload(pb_file):
             file_path=file_path,
             override=True,
             database="user_submitted",
+            size_limits={
+                "votes": 500,
+                "projects": 20
+            },
             verbosity=3
         )
         compute_election_properties(
@@ -1093,8 +1094,8 @@ def handle_file_upload(pb_file):
             verbosity=3,
         )
     except Exception as e:
-        raise e
+        raise ApiExcepetion(str(e), status_code=status.HTTP_406_NOT_ACCEPTABLE)
     finally:
         fs.delete(file_path)
 
-    return {election_name: election_name, election_id: election_id}
+    return {"election_name": election_name}
