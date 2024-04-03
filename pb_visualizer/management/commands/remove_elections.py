@@ -10,7 +10,7 @@ def remove_elections(election_ids=None, database="default"):
     else:
         election_query = Election.objects.using(database).get(id__in=election_ids)
     for e in election_query:
-        print("deleting", e.name)
+        print(f"deleting {e}")
         e.delete()
 
 
