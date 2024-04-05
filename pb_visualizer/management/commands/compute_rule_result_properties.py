@@ -32,7 +32,7 @@ def compute_rule_result_properties(
     n_elections = len(election_query)
     for index, election_obj in enumerate(election_query):
         print_if_verbose(
-            f"Computing rule result properties of election {index + 1}/{n_elections}: {election_obj.name}"
+            f"Computing rule result properties of election {index + 1}/{n_elections}: {election_obj.name} "
             f"{election_obj.num_votes} voters and {election_obj.num_projects} projects -- {election_obj.ballot_type.name}",
             1,
             verbosity,
@@ -119,11 +119,14 @@ def export_rule_result_properties(
                     if metadata_obj.applies_to_election(election_obj):
                         print(f"\t\tProperty: {property}")
                         instance, profile = election_parser.get_parsed_election()
-                        value = prop_func(instance, profile, budget_allocation)
-                        with open(f"{export_file}", "a") as f:
-                            f.write(
-                                f'"{election_obj.name}";{rule_result_object.rule.abbreviation};{property};{str(value)}\n'
-                            )
+                        try:
+                            value = prop_func(instance, profile, budget_allocation)
+                            with open(f"{export_file}", "a") as f:
+                                f.write(
+                                    f'"{election_obj.name}";{rule_result_object.rule.abbreviation};{property};{str(value)}\n'
+                                )
+                        except Exception as e:
+                            print(e)
 
 
 class Command(BaseCommand):
