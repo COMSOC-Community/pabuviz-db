@@ -2,5 +2,6 @@ numpy
 django
 djangorestframework
 django-cors-headers
+django_extensions
 pabutools
 black

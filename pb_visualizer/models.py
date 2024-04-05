@@ -114,7 +114,7 @@ class Election(models.Model):
         max_digits=15,
         decimal_places=2,
         verbose_name="budget",
-        help_text="maximum budget to spend",
+        help_text="maximum budget to spend (in local currency)",
     )
     ballot_type = models.ForeignKey(
         BallotType,
@@ -155,23 +155,25 @@ class Election(models.Model):
 
     has_categories = models.BooleanField(
         default=False,
-        verbose_name="project categories",
-        help_text="each project is assigned one or more project categories",
+        verbose_name="project have categories",
+        help_text="if yes, each project is assigned one or more project categories",
     )
     has_targets = models.BooleanField(
         default=False,
-        verbose_name="project target groups",
-        help_text="each project is assigned one or more target groups",
+        verbose_name="project have target groups",
+        help_text="if yes, each project is assigned one or more target groups (with respect to the "
+                  "voters)",
     )
     has_neighborhoods = models.BooleanField(
         default=False,
-        verbose_name="neighbourhoods",
-        help_text="the voters are divided into neighborhoods",
+        verbose_name="neighbourhoods division",
+        help_text="if yes, the voters are divided into neighborhoods",
     )
     has_voting_methods = models.BooleanField(
         default=False,
-        verbose_name="voting methods",
-        help_text="the voting method (e.g. online vote or in person) is recorded for each vote",
+        verbose_name="voting methods is specified",
+        help_text="if yes, the voting method (e.g. online vote or in person) is recorded for each "
+                  "vote",
     )
 
     is_trivial = models.BooleanField(default=False)
