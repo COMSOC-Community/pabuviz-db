@@ -405,7 +405,7 @@ def initialize_rules(ballot_type_objs, database='default'):
     greedy_obj, _ = RuleFamily.objects.db_manager(database).update_or_create(
         abbreviation="greedy",
         defaults={
-            "name": "greedy satisfaction maximiser",
+            "name": "approximate satisfaction maximiser",
             "description": "greedy approximations of the satisfaction maximiser",
             "order_priority": order_priority,
         },
@@ -442,7 +442,7 @@ def initialize_rules(ballot_type_objs, database='default'):
         abbreviation="mes",
         defaults={
             "name": "methods of equal shares",
-            "description": "methods of equal shares",
+            "description": "methods of equal shares (see equalshares.net)",
             "order_priority": order_priority,
         },
     )
@@ -479,7 +479,7 @@ def initialize_rules(ballot_type_objs, database='default'):
         abbreviation="mes_card",
         defaults={
             "name": "methods of equal shares (card)",
-            "description": "methods of equal shares with cardinality satisfaction",
+            "description": "methods of equal shares with cardinality satisfaction (see equalshares.net)",
             "order_priority": order_priority,
             "parent_family": mes_obj
         },
@@ -491,7 +491,7 @@ def initialize_rules(ballot_type_objs, database='default'):
         abbreviation="mes_cost",
         defaults={
             "name": "methods of equal shares (cost)",
-            "description": "methods of equal shares with cost satisfaction",
+            "description": "methods of equal shares with cost satisfaction (see equalshares.net)",
             "order_priority": order_priority,
             "parent_family": mes_obj
         },
@@ -504,7 +504,7 @@ def initialize_rules(ballot_type_objs, database='default'):
         abbreviation="mes_effort",
         defaults={
             "name": "methods of equal shares (effort)",
-            "description": "methods of equal shares with effort satisfaction",
+            "description": "methods of equal shares with effort satisfaction (see equalshares.net)",
             "order_priority": order_priority,
             "parent_family": mes_obj
         },
@@ -517,7 +517,7 @@ def initialize_rules(ballot_type_objs, database='default'):
         abbreviation="mes_sqrt",
         defaults={
             "name": "methods of equal shares (sqrt)",
-            "description": "methods of equal shares with sqrt satisfaction",
+            "description": "methods of equal shares with cost square root satisfaction (see equalshares.net)",
             "order_priority": order_priority,
             "parent_family": mes_obj
         },
@@ -532,7 +532,8 @@ def initialize_rules(ballot_type_objs, database='default'):
         abbreviation="greedy_card",
         defaults={
             "name": "greedy (card)",
-            "description": "greedily selects projects based on the approval score to cost ratio",
+            "description": "greedily selects projects based on the approval score to cost ratio "
+                           "(number of approvers divided by cost)",
             "order_priority": order_priority,
             "rule_family": greedy_obj,
         },
@@ -544,7 +545,8 @@ def initialize_rules(ballot_type_objs, database='default'):
         abbreviation="greedy_cost",
         defaults={
             "name": "greedy (cost)",
-            "description": "greedily selects projects based on the cost to cost ratio, i.e., the approval score",
+            "description": "greedily selects projects based on the cost to cost ratio, i.e., the "
+                           "approval score (number of approvers)",
             "order_priority": order_priority,
             "rule_family": greedy_obj,
         },
@@ -556,8 +558,9 @@ def initialize_rules(ballot_type_objs, database='default'):
         abbreviation="greedy_cc",
         defaults={
             "name": "greedy (Chamberlin-Courant)",
-            "description": "greedily selects projects based on the marginal coverage to cost ratio (the coverage of "
-            "a project is the number of approvers)",
+            "description": "greedily selects projects based on the marginal coverage to cost ratio "
+                           "(the coverage of a project for a partial budget allocation is the "
+                           "number of approvers for no approved projects has (yet) been selected).",
             "order_priority": order_priority,
             "rule_family": greedy_obj,
         },
