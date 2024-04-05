@@ -7,6 +7,7 @@ from pb_visualizer.management.commands.add_election import add_election
 from pb_visualizer.management.commands.compute_election_properties import compute_election_properties
 from pb_visualizer.management.commands.compute_rule_result_properties import compute_rule_result_properties
 from pb_visualizer.management.commands.compute_rule_results import compute_rule_results
+from pb_visualizer.management.commands.remove_old_user_elections import remove_old_user_elections
 
 
 from .models import Rule
@@ -162,7 +163,6 @@ def get_election_details(
 
     for election_obj in election_query_set:
         election_dict = ElectionSerializer(election_obj).data
-
         election_details = {}
 
         # first we get all the properties that are fields of the election model
@@ -1053,23 +1053,32 @@ def handle_file_upload(pb_file):
     """
     WORK IN PROGRESS
     """
+    rule_lists = {
+        "approval": ["greedy_cost", "mes_cost"],
+        "ordinal": [],
+        "cumulative": [],
+        "cardinal": [],
+    }
+    
     fs = FileSystemStorage()
     file_path = "tmp/" + pb_file.name + f"_{random.randint(0, 10000):}"
     fs.save(file_path, pb_file)
     
+    remove_old_user_elections()
+    
     try:
-        election_name, election_id = add_election(
+        election_obj = add_election(
             file_path=file_path,
             override=True,
             database="user_submitted",
             size_limits={
                 "votes": 500,
-                "projects": 20
+                "projects": 500
             },
             verbosity=3
         )
         compute_election_properties(
-            [election_name],
+            [election_obj.name],
             exact=False,
             override=True,
             use_db=True,
@@ -1077,8 +1086,8 @@ def handle_file_upload(pb_file):
             verbosity=3
         )
         compute_rule_results(
-            [election_name],
-            rule_list=["greedy_cost", "mes_cost"],
+            [election_obj.name],
+            rule_list=rule_lists[election_obj.ballot_type.name],
             exact=False,
             override=True,
             use_db=True,
@@ -1086,7 +1095,7 @@ def handle_file_upload(pb_file):
             verbosity=3,
         )
         compute_rule_result_properties(
-            [election_name],
+            [election_obj.name],
             exact=False,
             override=True,
             use_db=True,
@@ -1098,4 +1107,4 @@ def handle_file_upload(pb_file):
     finally:
         fs.delete(file_path)
 
-    return {"election_name": election_name}
+    return {"election_name": election_obj.name}

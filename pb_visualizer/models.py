@@ -190,6 +190,7 @@ class Election(models.Model):
         "country",
         "unit",
         "subunit",
+        "instance",
         "budget",
         "num_projects",
         "num_votes",

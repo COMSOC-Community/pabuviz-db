@@ -554,7 +554,7 @@ def add_election(file_path: str, override: bool, database: str = 'default', size
     os.makedirs(data_dir_path, exist_ok=True)
     shutil.copyfile(file_path, os.path.join(data_dir_path, os.path.basename(file_path)))
 
-    return election_obj.name, election_obj.id
+    return election_obj
 
 class Command(BaseCommand):
     help = "Add .pb file to database"
@@ -695,8 +695,8 @@ class Command(BaseCommand):
                             + str(traceback.format_exc())
                             + "	</strong></p>\n<ul>"
                         )
-                        # print(traceback.format_exc())
-                        print(e)
+                        print(traceback.format_exc())
+                        print(f"error: {e}")
 
             # Finalizing the log
             log.append("</ul>\n<p>The datasets have been successfully added in ")

@@ -28,7 +28,7 @@ def compute_election_properties(
     n_elections = len(election_query)
     for index, election_obj in enumerate(election_query):
         print_if_verbose(
-            f"Computing instance and profile properties of election{index + 1}/{n_elections}: {election_obj.name}",
+            f"Computing instance and profile properties of election {index + 1}/{n_elections}: {election_obj.name}",
             1,
             verbosity,
             persist=True,
@@ -73,7 +73,7 @@ def compute_election_properties(
 
 
 def export_election_properties(
-    export_file_root: str,
+    export_file: str,
     election_names: list[str]|None = None,
     exact: bool = False,
     override: bool = False,
@@ -89,9 +89,7 @@ def export_election_properties(
     n_elections = len(election_query)
 
     headers = ["election_name", "property_short_name", "value"]
-    with open(f"{export_file_root}_InstanceProperties.csv", "w") as f:
-        f.write(";".join(headers) + "\n")
-    with open(f"{export_file_root}_ProfileProperties.csv", "w") as f:
+    with open(export_file, "w") as f:
         f.write(";".join(headers) + "\n")
 
     for index, election_obj in enumerate(election_query):
@@ -109,7 +107,7 @@ def export_election_properties(
             if metadata_obj.applies_to_election(election_obj):
                 instance, profile = election_parser.get_parsed_election()
                 prop_value = instance_property_mapping[instance_property](instance)
-                with open(f"{export_file_root}_InstanceProperties.csv", "a") as f:
+                with open(export_file, "a") as f:
                     f.write(f'"{election_obj.name}";{instance_property};{prop_value}\n')
 
         # we now compute the profile properties
@@ -120,7 +118,7 @@ def export_election_properties(
                 prop_value = profile_property_mapping[profile_property](
                     instance, profile
                 )
-                with open(f"{export_file_root}_ProfileProperties.csv", "a") as f:
+                with open(export_file, "a") as f:
                     f.write(f'"{election_obj.name}";{profile_property};{prop_value}\n')
 
 
@@ -181,7 +179,7 @@ class Command(BaseCommand):
 
         if options["file"]:
             export_election_properties(
-                options["file"],
+                export_file=options["file"],
                 election_names=options["election_names"],
                 exact=options["exact"],
                 use_db=options["usedb"],
