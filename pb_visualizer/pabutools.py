@@ -24,6 +24,7 @@ from pabutools.election import (
 
 from pb_visualizer.models import *
 
+
 instance_property_mapping = {
     "sum_proj_cost": instanceproperties.sum_project_cost,
     "fund_scarc": instanceproperties.funding_scarcity,
