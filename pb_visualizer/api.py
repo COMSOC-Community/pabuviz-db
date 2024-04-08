@@ -1054,10 +1054,10 @@ def handle_file_upload(pb_file):
     WORK IN PROGRESS
     """
     rule_lists = {
-        "approval": ["greedy_cost", "mes_cost"],
-        "ordinal": [],
-        "cumulative": [],
-        "cardinal": [],
+        "approval": ["greedy_cost", "max_cost", "mes_cost", "seq_phragmen"],
+        "ordinal": ["greedy_borda", "max_borda", "mes_borda"],
+        "cumulative": ["greedy_cardbal", "max_add_card", "mes_cardbal"],
+        "cardinal": ["greedy_cardbal", "max_add_card", "mes_cardbal"],
     }
     
     fs = FileSystemStorage()
@@ -1072,8 +1072,8 @@ def handle_file_upload(pb_file):
             override=True,
             database="user_submitted",
             size_limits={
-                "votes": 500,
-                "projects": 500
+                "votes": 5000,
+                "projects": 20
             },
             verbosity=3
         )
