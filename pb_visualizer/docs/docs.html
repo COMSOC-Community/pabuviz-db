@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation (Updated)</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        h1, h3, h4 { color: #333; }
+        code { background-color: #f4f4f4; color: black; padding: 2px 4px; border-radius: 4px; }
+        pre { background-color: #f4f4f4; padding: 10px; border-radius: 5px; overflow-y: auto;}
+        .endpoint { background-color: #e8e8e8; padding: 10px; border-radius: 5px; margin: 20px 0; }
+        .parameters { margin-left: 20px; }
+        .sample { background-color: #f9f9f9; padding: 10px; border-left: 4px solid #ccc; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<h1>Pabuviz Database API Documentation</h1>
+
+
+<p>Welcome to the <strong>Pabuviz</strong> API documentation. This API gives you direct access to all data which is used by <code>pabuviz.org</code>.</p>
+<p>
+    <strong>Pabuviz</strong> is a project that came to life at
+    the <a href="https://www.illc.uva.nl/">Institute for Logic, Language and Computation of the University of Amsterdam</a> in
+    the Computational Social Choice Group led by <a href="https://staff.science.uva.nl/u.endriss/">Ulle Endriss</a>.
+  </p>
+
+  <p>
+    <a href="https://markus-utke.github.io/">Markus Utke</a> has been the
+    main developer for the project, helped (marginally) by <a href="https://simonrey.fr">Simon Rey</a>.
+  </p>
+
+  <p>
+    Please get in touch with either Markus or Simon if you have any questions or thoughts you would like to share!
+  </p>
+
+<h2>Overview</h2>
+
+<p>All requests should be made to the following base URL:</p>
+<pre><code>https://db.pabuviz.org/api</code></pre>
+
+<div>The type of all parameters corresponds to the expected type when parsing the parameter as <code>JSON</code> in <code>python</code>.</div>
+
+The parameter <code>filters</code> can be used in several calls to filter elections by election properties.
+The election properties can be requested through the endpoint <code>/election_properties</code>.
+Each election property has an <code>inner_type</code> and depending on that different filters can be used:
+<ul>
+    <li><code>int</code>, <code>float</code> or <code>date</code>: <code>{"min": ..., "max": ...}</code></li>
+    <li><code>bool</code>: <code>true</code> or <code>false</code></li>
+    <li><code>str</code>: <code>{"contains": ...}</code> or <code>{"equals": ...}</code></li>
+</ul>
+
+An example filter could look like this:
+<pre><code>{
+    "name": {"contains": "Amsterdam"},
+    "num_projects": {"min": 30},
+    "has_categories": true
+}</code></pre>
+
+<h2>Endpoints</h2>
+
+<h3>Get Ballot Type List</h3>
+<div class="endpoint">
+    <strong>URL</strong>: <code>/ballot_types</code><br>
+    <strong>Method</strong>: <code>GET</code><br>
+    <strong>Description</strong>: Returns the list of ballot types.
+</div>
+<h4>Parameters</h4>
+<div class="parameters">
+    Optional:
+    <ul>
+        <li><code>filter_existing</code> (bool, default: True): If True, only ballot types with an election in the database are returned.</li>
+    </ul>
+</div>
+<h4>Sample Request</h4>
+<pre><code>GET https://db.pabuviz.org/api/ballot_types?filter_existing=true</code></pre>
+<h4>Sample Response</h4>
+<pre><code>{
+    "data": [
+        {
+            "name": "approval",
+            "description": "voters simply select a set of projects (the ones they approve), potentially with additional constraints"
+        },
+        {
+            "name": "ordinal",
+            "description": "voters rank in order of preferences some or all of the projects"
+        },
+        {
+            "name": "cumulative",
+            "description": "voters distribute a given number of points between the projects"
+        }
+    ]
+}</code></pre>
+
+<h3>Get Election List</h3>
+<div class="endpoint">
+    <strong>URL</strong>: <code>/elections</code><br>
+    <strong>Method</strong>: <code>GET</code><br>
+    <strong>Description</strong>: Retrieves a list of all elections that match the given filters in the database.
+</div>
+<h4>Parameters</h4>
+<div class="parameters">
+    Optional:
+    <ul>
+        <li><code>filters</code> (dict): Filters to filter the elections by.</li>
+    </ul>
+</div>
+<h4>Sample Request</h4>
+<pre><code>GET https://db.pabuviz.org/api/elections/?filters={%22num_projects%22%3A{%22min%22%3A50},%22ballot_type%22%3A%22cumulative%22}</code></pre>
+<h4>Sample Response</h4>
+<pre><code>{
+    "data": [
+        {
+            "name": "Czestochowa, 2020, 2019-09",
+            "description": "Municipal PB in Częstochowa",
+            "country": "Poland",
+            "unit": "Czestochowa",
+            "subunit": "",
+            "instance": "2020",
+            "budget": 2367122.0,
+            "num_projects": 90,
+            "num_votes": 16978,
+            "ballot_type": "cumulative",
+            "rule": "greedy_cost",
+            "date_begin": "2019-09-06",
+            "date_end": "2019-09-25",
+            "has_categories": false,
+            "has_targets": false,
+            "has_neighborhoods": false,
+            "has_voting_methods": false
+        }
+    ],
+    "metadata": {
+        ...
+    }
+}</code></pre>
+
+<h3>Get Election Details</h3>
+<div class="endpoint">
+    <strong>URL</strong>: <code>/election_details</code><br>
+    <strong>Method</strong>: <code>GET</code><br>
+    <strong>Description</strong>: Retrieves a list of elections of the given ballot type and includes specified election properties.
+</div>
+<h4>Parameters</h4>
+<div class="parameters">
+    Required:
+    <ul>
+        <li><code>property_short_names</code> (list[string]): List of election property short names to include in the response.</li>
+        <li><code>ballot_type</code> (string): The ballot type of the elections (one of "approval", "ordinal", "cumulative").</li>
+        <li><code>filters</code> (dict): Filters for elections.</li>
+    </ul>
+</div>
+<h4>Sample Request</h4>
+<pre><code>GET https://db.pabuviz.org/api/election_details/?property_short_names=[%22med_ballot_cost%22,%22avg_proj_cost%22]&ballot_type=%22ordinal%22</code></pre>
+<h4>Sample Response</h4>
+<pre><code>{
+    "data": {
+        "Wieliczka, Green Budget, 2023, 2023-04": {
+            "avg_proj_cost": 49178.328125,
+            "med_ballot_cost": 88969.0,
+        },
+        "Poznań, 10 - Świerczewo, Wilda, Zielony Dębiec, 10 - Świerczewo, Wilda, Zielony Dębiec, 2023, 2022-10": {
+            "avg_proj_cost": 573875.0,
+            "med_ballot_cost": 716000.0,
+        },
+        ...
+    },
+    "metadata": [
+        ...
+    ]
+}</code></pre>
+
+<h3>Get Project List</h3>
+<div class="endpoint">
+    <strong>URL</strong>: <code>/projects</code><br>
+    <strong>Method</strong>: <code>GET</code><br>
+    <strong>Description</strong>: Retrieves a list of all projects for a given election.
+</div>
+<h4>Parameters</h4>
+<div class="parameters">
+    Required:
+    <ul>
+        <li><code>election_name</code> (string): Name of the election.</li>
+    </ul>
+</div>
+<h4>Sample Request</h4>
+<pre><code>GET https://db.pabuviz.org/api/projects/?election_name=%22Amsterdam%2C+Nieuw-West%2C+647%2C+2022-01%22</code></pre>
+<h4>Sample Response</h4>
+<pre><code>{
+    "data": [
+        {
+            "project_id": "44253",
+            "name": "Vergroening parkeerplaatsen Zuiderakerweg",
+            "cost": 5000.0,
+            "description": "",
+            "rules_selected_by": [
+                "greedy_card",
+                "greedy_cost",
+            ],
+        },
+        ...
+    ],
+    "metadata": {
+        ...
+    }
+}</code></pre>
+
+<h3>Get Rule List</h3>
+<div class="endpoint">
+    <strong>URL</strong>: <code>/rules</code><br>
+    <strong>Method</strong>: <code>GET</code><br>
+    <strong>Description</strong>: Retrieves a nested list of all rule families, including their associated rules.
+</div>
+<h4>Sample Request</h4>
+<pre><code>GET https://db.pabuviz.org/api/rules</code></pre>
+<h4>Sample Response</h4>
+<pre><code>{
+    "data": [
+        {
+            "name": "approximate satisfaction maximiser",
+            "abbreviation": "greedy",
+            "description": "greedy approximations of the satisfaction maximiser",
+            "elements": [
+                {
+                    "abbreviation": "greedy_cost",
+                    "name": "greedy (cost)",
+                    "description": "greedily selects projects based on the cost to cost ratio, i.e., the approval score (number of approvers)",
+                    "order_priority": 9,
+                    "rule_family": "greedy",
+                    "applies_to": [
+                        "approval"
+                    ]
+                },
+                ...
+            ],
+            "sub_families": [],
+            "applies_to": [
+                "approval",
+                "ordinal",
+                "cumulative",
+                "cardinal"
+            ]
+        },
+        {
+            "name": "satisfaction maximiser",
+            "abbreviation": "max_sat",
+            "description": "exact satisfaction maximisers",
+            "elements": [
+                {
+                    "abbreviation": "max_card",
+                    "name": "cardinality satisfaction maximiser",
+                    "description": "selects a feasible set of projects with the maximum total cardinality satisfaction (number of approved and selected projects)",
+                    "order_priority": 11,
+                    "rule_family": "max_sat",
+                    "applies_to": [
+                        "approval"
+                    ]
+                },
+                ...
+            ],
+            "sub_families": [],
+            "applies_to": [
+                "approval",
+                "ordinal",
+                "cumulative",
+                "cardinal"
+            ]
+        },
+        ...
+    ]
+}</code></pre>
+
+
+<h3>Get Election Property List</h3>
+<div class="endpoint">
+    <strong>URL</strong>: <code>/election_properties</code><br>
+    <strong>Method</strong>: <code>GET</code><br>
+    <strong>Description</strong>: Retrieves a list of election properties that can be used as filters.
+</div>
+<h4>Parameters</h4>
+<div class="parameters">
+    Optional:
+    <ul>
+        <li><code>property_short_names</code> (list[string], default: None): List of short names of properties to request.</li>
+        <li><code>ballot_type</code> (string, default: None): Name of the ballot type ("approval", "ordinal", "cumulative").</li>
+    </ul>
+</div>
+<h4>Sample Request</h4>
+<pre><code>GET https://db.pabuviz.org/api/election_properties/?&ballot_type=%22approval%22</code></pre>
+<h4>Sample Response</h4>
+<pre><code>{
+    "data": [
+        {
+            "name": "name",
+            "short_name": "name",
+            "description": "",
+            "inner_type": "str"
+        },
+        {
+            "name": "median ballot length",
+            "short_name": "med_ballot_len",
+            "description": "median number of projects appearing in a ballot",
+            "inner_type": "int"
+        },
+        ...
+    ]
+}</code></pre>
+
+
+
+
+<h3>Get Rule Result Property List</h3>
+<div class="endpoint">
+    <strong>URL</strong>: <code>/rule_properties</code><br>
+    <strong>Method</strong>: <code>GET</code><br>
+    <strong>Description</strong>: Retrieves a list of rule result properties. These are metrics on the result of a rule for an election.
+</div>
+<h4>Parameters</h4>
+<div class="parameters">
+    Optional:
+    <ul>
+        <li><code>property_short_names</code> (list[string], default: None): List of short names of properties to request. If None, all properties will be returned.</li>
+    </ul>
+</div>
+<h4>Sample Request</h4>
+<pre><code>GET https://db.pabuviz.org/api/rule_properties</code></pre>
+<h4>Sample Response</h4>
+<pre><code>{
+    "data": [
+        {
+            "short_name": "avg_card_sat",
+            "name": "average cardinality satisfaction",
+            "description": "average over all voters of the number of approved projects selected by the rule",
+            "inner_type": "float",
+            "range": "0-",
+            "order_priority": 1,
+            "applies_to": [
+                "approval"
+            ]
+        },
+        ...
+    ]
+}</code></pre>
+
+
+<h3>Get Rule Result Average Properties</h3>
+<div class="endpoint">
+    <strong>URL</strong>: <code>/avg_rule_property</code><br>
+    <strong>Method</strong>: <code>GET</code><br>
+    <strong>Description</strong>: Returns for each given rule and rule result property, the average value of that property for the result of that rule. Only considers elections that have all given rules and rule result properties computed.
+</div>
+<h4>Parameters</h4>
+<div class="parameters">
+    Required:
+    <ul>
+        <li><code>rule_abbr</code> (list[string]): List of abbreviations of the rules.</li>
+        <li><code>property_short_names</code> (list[string]): List of short names of the election properties.</li>
+    </ul>
+    Optional:
+    <ul>
+        <li><code>election_filters</code> (dict, default: {}): Additional filters for the elections considered.</li>
+        <!-- <li><code>include_incomplete_elections</code> (bool, default: False): Whether to include incomplete elections.</li> -->
+    </ul>
+</div>
+<h4>Sample Request</h4>
+<pre><code>GET https://db.pabuviz.org/api/avg_rule_property/?rule_abbr_list=[%22greedy_card%22%2C%22greedy_cost%22]&property_short_names=[%22avg_nrmcard_sat%22%2C%22inverted_cost_gini%22]&election_filters={%22num_projects%22%3A{%22min%22%3A80}}</code></pre>
+<h4>Sample Response</h4>
+<pre><code>{
+    "data": {
+        "greedy_card": {
+            "avg_nrmcard_sat": 0.07931805878402662,
+            "inverted_cost_gini": 0.5701038639358232
+        },
+        "greedy_cost": {
+            "avg_nrmcard_sat": 0.051316958915611055,
+            "inverted_cost_gini": 0.5202858356890813
+        }
+    },
+    "meta_data": {
+        "num_elections": 48
+    }
+}</code></pre>
+
+<h3> Get Satisfaction Histogram</h3>
+<div class="endpoint">
+    <strong>URL</strong>: <code>/satisfaction_histogram</code><br>
+    <strong>Method</strong>: <code>GET</code><br>
+    <strong>Description</strong>: Returns for each given rule, the satisfaction histogram for the result of that rule.
+    The bins are [0.0, 0.0], (0.0, 0.05], (0.05, 0.10], ..., (0.95, 1.0].
+</div>
+<h4>Parameters</h4>
+<div class="parameters">
+    Required:
+    <ul>
+        <li><code>rule_abbr</code> (list[string]): List of abbreviations of the rules.</li>
+    </ul>
+    Optional:
+    <ul>
+        <li><code>election_filters</code> (dict, default: {}): Additional filters for the elections considered.</li>
+    </ul>
+</div>
+<h4>Sample Request</h4>
+<pre><code>GET https://db.pabuviz.org/api/rule_voter_satisfaction_histogram/?rule_abbr_list=[%22greedy_card%22%2C%22greedy_cost%22]&property_short_names=[%22avg_nrmcard_sat%22%2C%22inverted_cost_gini%22]&election_filters={%22num_projects%22%3A{%22min%22%3A80}}</code></pre>
+<h4>Sample Response</h4>
+<pre><code>{
+    "data": {
+        "greedy_card": {
+            "hist_data": [
+                0.16720532773043595,
+                0.14741755600267872,
+                ...,
+                0.0,
+                0.0
+            ],
+            "avg": 0.12950753612063
+        },
+        ...
+    }
+    "meta_data": {
+        "num_elections": 48
+    }
+}</code></pre>
+
+<h3>Get Category Proportions</h3>
+<div class="endpoint">
+    <strong>URL</strong>: <code>/get_category_proportions</code><br>
+    <strong>Method</strong>: <code>GET</code><br>
+    <strong>Description</strong>: Returns category proportions for a given election and a list of rules.
+</div>
+<h4>Parameters</h4>
+<div class="parameters">
+    Required:
+    <ul>
+        <li><code>election_name</code> (string): Name of the election.</li>
+        <li><code>rule_abbreviation_list</code> (list[string]): List of rule abbreviations.</li>
+    </ul>
+</div>
+<h4>Sample Request</h4>
+<pre><code>GET https://db.pabuviz.org/api/category_proportions/?election_name=%22Amsterdam%2C+Nieuw-West%2C+647%2C+2022-01%22&rule_abbreviation_list=[%22greedy_card%22%2C%22greedy_cost%22]</code></pre>
+<h4>Sample Response</h4>
+<pre><code>{
+    "data": {
+        "category_names": [
+            "Cultuur",
+            ...,
+            "Sociaal"
+        ],
+        "vote_cost_shares": [
+            0.05554095582607385,
+            ...,
+            0.03719900519353738
+        ],
+        "result_cost_shares": {
+            "greedy_card": [
+                0.19905619637123778,
+                ...,
+                0.08355290745342003
+            ],
+            "greedy_cost": [
+                0.0,
+                ...,
+                0.08293264750829327
+            ]
+        }
+    }
+}</code></pre>
+
+</body>
+</html>

@@ -361,6 +361,44 @@ def get_filterable_election_property_list(
     }
 
 
+def get_election_property_values_list(
+    property_short_name: str,
+    ballot_type: str,
+    database: str = "default"
+) -> dict[str, list]:
+    """
+    Returns a list of all unique values of some election property.
+
+    Parameters
+    ----------
+        database: str = "default"
+            name of the database to work on
+    
+    Returns
+    -------
+        dict
+            "data":
+                serialized nested list of all RuleFamily objects,
+                the 'elements' field will be a serialized list of rules
+                    
+    """
+    election_details = get_election_details(
+        property_short_names=[property_short_name],
+        ballot_type=ballot_type,
+        filters={},
+        database=database
+    )
+    
+    values = set()
+    for election_name in election_details["data"]:
+        values.add(election_details["data"][election_name][property_short_name])
+    
+    value_list = list(values)
+    value_list.sort()     
+    
+    return {"data": value_list} 
+
+
 def get_rule_result_average_data_properties(
     rule_abbr_list: Iterable[str],
     property_short_names: Iterable[str],
@@ -454,7 +492,7 @@ def get_satisfaction_histogram(
     database: str = "default"
 ) -> dict[str, list[float]]:
     """
-    Returns for each given rule, the satisfaction histogram for the result of that rule.
+    Returns for each given rule, the satisfaction histogram for the result of that rule. The bins are [0.0,0.0], (0.0,0.05], ..., (0.95,1.0].
     This is more or less only a wrapper for calling get_rule_result_average_data_properties on the agg_nrmcost_sat property.
 
     Parameters
@@ -852,43 +890,6 @@ def filter_elections(
     database: str = "default",
     **election_filters
 ) -> QuerySet:
-    # """
-    # Returns histogram data for a given election property
-
-    # Parameters
-    # ----------
-    #     election_property_short_name: str
-    #         short name of the elecion property
-    #     election_filters: dict = {}
-    #         additional filters for the elections considered, see filter_elections method for details 
-    #     num_bins: int = 20
-    #         number of histogram bins
-    #     by_ballot_type: bool = False
-    #         if True, th histogramm data will be grouped by the ballot type,
-    #         the bin selection will be made globally, but the values will be given for each ballot type separately
-    #     log_scale: bool = False
-    #         whether to use logarithmic scale for the histogram bins,
-    #         if True, all values smaller or equal zero will be ignored
-    #     database: str = "default"
-    #         name of the database to work on
-    
-    # Returns
-    # -------
-    #     dict
-    #         "data":
-    #             dictionary containing the histogram data:
-    #                 "bins":
-    #                     list of length num_bins+1, containing all bin border values
-    #                 "bin_midpoints":
-    #                     list of middle points for each bin, useful for visualization
-    #                 "values":
-    #                     list of values for each bin if by_ballot_type is False
-    #                     else dict with ballot type name as key and list of values for each bin as value
-    #         "metadata":
-    #             "election_property":
-    #                 the serialized election property,
-    #                 same format as get_filterable_election_property_list returns
-    # """
     if election_query_set == None:
         election_query_set = Election.objects.using(database).all()
 

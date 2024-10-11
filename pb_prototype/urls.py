@@ -21,10 +21,12 @@ from pb_visualizer import views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/", views.api_documentation),
     path("api/ballot_types/", views.ballot_type_list),
     path("api/elections/", views.election_list),
     path("api/election_details/", views.election_details),
     path("api/election_properties/", views.filterable_election_property_list),
+    path("api/election_property_values_list/", views.election_property_values_list),
     path("api/projects/", views.project_list),
     path("api/rules/", views.rule_family_list),
     path("api/rule_properties/", views.rule_result_property_list),

@@ -1,4 +1,7 @@
+import os
 import json
+from django.conf import settings
+from django.http import HttpResponse
 from time import sleep
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -8,6 +11,13 @@ from pb_visualizer.api import *
 
 caching_parameters = {"cache-control": "max-age=1"}
 
+@api_view(["GET"])
+def api_documentation(request):
+    if request.method == "GET":
+        file_path = os.path.join(settings.BASE_DIR, 'pb_visualizer/docs/docs.html')
+        with open(file_path, 'r') as file:
+            html_content = file.read()
+        return HttpResponse(html_content, content_type='text/html')
 
 @api_view(["GET"])
 def election_list(request):
@@ -32,6 +42,22 @@ def election_details(request):
             property_short_names=property_short_names,
             ballot_type=ballot_type,
             filters=filters,
+            database=database
+        )
+        return Response(data, headers=caching_parameters)
+
+
+@api_view(["GET"])
+def election_property_values_list(request):
+    if request.method == "GET":
+        property_short_name = json.loads(request.GET.get("property_short_name", "null"))
+        ballot_type = json.loads(request.GET.get("ballot_type", "null"))
+        user_submitted = json.loads(request.GET.get("user_submitted", "null"))
+        database =  "user_submitted" if user_submitted else "default"  
+
+        data = get_election_property_values_list(
+            property_short_name=property_short_name,
+            ballot_type=ballot_type,
             database=database
         )
         return Response(data, headers=caching_parameters)
