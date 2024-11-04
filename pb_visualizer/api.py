@@ -152,7 +152,7 @@ def get_election_details(
             "metadata":
                 serialized list of all given election properties
     """
-    election_query_set = filter_elections(**filters, database=database)
+    election_query_set = filter_elections(**filters, ballot_type=ballot_type, database=database)
     election_details_collection = {}
 
     properties = get_filterable_election_property_list(
@@ -395,7 +395,7 @@ def get_election_property_values_list(
     
     value_list = list(values)
     value_list.sort()     
-    
+    print(value_list)
     return {"data": value_list} 
 
 
