@@ -11,7 +11,7 @@ which contains the React application implementing the website for [pabuviz.org](
 You can access the API by querying [db.pabuviz.org/api](https://db.pabuviz.org/api). The documentation
 for the api is available directly at this link.
 
-## Development
+## Development/Deployment
 
 The database is implemented as a [Django](https://www.djangoproject.com/) project. It acts as an
 API that is queried by the website to retrieve the information it needs.
@@ -95,3 +95,21 @@ python manage.py compute_election_properties -v 3
 python manage.py compute_rule_results -v 3
 python manage.py compute_rule_result_properties -v 3
 ```
+
+### Update the Server
+
+- SSH to the server
+- Add your GitHub ssh key to the agent: `ssh-add ~/.ssh/your_key`
+- Move to the folder of the Django project: `cd django/pabiviz-db`
+- Pull the git: `git pull`
+- If static files have been updated:
+  - `source ../venv/bin/activate`
+  - `python manage.py collectstatic`
+- If the database needs updating:
+  - `source ../venv/bin/activate`
+  - `python manage.py makemigrations`
+  - `python manage.py migrate`
+- In any case, restart the uwsgi:
+  - `cd`
+  - `./restart_uwsgi.sh`
+- Log out from the server 
