@@ -276,12 +276,14 @@ def get_rule_result_property_list(
                 serialized list of RuleResultMetadata objects
                     
     """
+    property_short_name_list = list(property_short_names)
     query = RuleResultMetadata.objects.using(database).all()
-    if property_short_names != None:
-        query = query.filter(short_name__in=property_short_names)
+    if property_short_name_list != None:
+        query = query.filter(short_name__in=property_short_name_list)
 
     serializer = RuleResultMetadataSerializer(query, many=True)
-    return {"data": serializer.data}
+    sorted_data = sorted(serializer.data, key=lambda p: property_short_name_list.index(p["short_name"]))
+    return {"data": sorted_data}
 
 
 def get_filterable_election_property_list(
